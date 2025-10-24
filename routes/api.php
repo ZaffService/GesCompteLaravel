@@ -18,6 +18,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+
+
+
+
 // Routes API versionnées
 Route::prefix('v1')->group(function () {
     // Routes publiques (pas d'authentification requise)
