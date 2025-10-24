@@ -14,16 +14,22 @@ return new class extends Migration
         Schema::create('clients', function (Blueprint $table) {
             $table->uuid('id')->primary(); // UUID comme clé primaire
             $table->string('titulaire');
-            $table->string('nci')->unique()->nullable();
+            $table->string('nci', 13)->unique()->nullable(); // CNI sénégalais : 13 chiffres
             $table->string('email')->unique();
-            $table->string('telephone')->unique();
+            $table->string('telephone', 13)->unique(); // Format +221XXXXXXXXX
             $table->string('adresse')->nullable();
             $table->string('password')->nullable();
-            $table->string('code')->nullable();
+            $table->string('code', 6)->nullable(); // Code à 6 caractères
+            $table->timestamp('email_verified_at')->nullable();
+            $table->rememberToken();
+            $table->softDeletes(); // Soft delete activé
             $table->timestamps();
 
-            // Index supplémentaires pour recherche rapide
+            // Index pour les performances
             $table->index(['email', 'telephone']);
+            $table->index('nci');
+            $table->index('titulaire');
+            $table->index('code');
         });
     }
 
