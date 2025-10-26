@@ -7,15 +7,6 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 
 /**
- * @OA\Info(
- *     title="API Banque Laravel",
- *     version="1.0.0",
- *     description="Documentation complète de l'API de gestion des comptes bancaires",
- *     @OA\Contact(
- *         email="seckmoustapha238@gmail.com",
- *         name="Moustapha Seck"
- *     )
- * )
  * @OA\Server(
  *     url="https://moustapha-seck.onrender.com",
  *     description="Serveur de production"
