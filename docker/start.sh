@@ -8,6 +8,7 @@ echo "🚀 Starting API Banque Laravel Application..."
 # Wait for database to be ready
 echo "⏳ Waiting for database connection..."
 until pg_isready -h ${DB_HOST:-db} -p ${DB_PORT:-5432} -U ${DB_USERNAME:-banque_user}; do
+  echo "${DB_HOST:-db}:${DB_PORT:-5432} - no response"
   echo "Database is unavailable - sleeping"
   sleep 2
 done
