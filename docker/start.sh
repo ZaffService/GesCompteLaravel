@@ -47,6 +47,12 @@ fi
 echo "📚 Generating Swagger documentation..."
 php artisan l5-swagger:generate
 
+# Clear caches before optimization
+echo "🧹 Clearing caches..."
+php artisan config:clear
+php artisan cache:clear
+php artisan view:clear
+
 # Clear and cache config
 echo "⚡ Optimizing application..."
 php artisan config:cache
