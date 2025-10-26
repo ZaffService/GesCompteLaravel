@@ -23,7 +23,7 @@
             "description": "Serveur de développement local"
         },
         {
-            "url": "http://localhost"
+            "url": "https://moustapha-seck.onrender.com"
         }
     ],
     "paths": {
