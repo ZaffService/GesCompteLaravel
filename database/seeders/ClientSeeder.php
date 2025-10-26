@@ -69,7 +69,9 @@ class ClientSeeder extends Seeder
 
         // Insérer les clients de test
         foreach ($clients as $client) {
-            Client::create($client);
+            Client::firstOrCreate([
+                'email' => $client['email']
+            ], $client);
         }
 
         // Créer 15 clients supplémentaires avec la factory

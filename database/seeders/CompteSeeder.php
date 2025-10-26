@@ -86,7 +86,9 @@ class CompteSeeder extends Seeder
 
         // Insérer les comptes de test
         foreach ($comptesData as $compteData) {
-            Compte::create($compteData);
+            Compte::firstOrCreate([
+                'numero_compte' => $compteData['numero_compte']
+            ], $compteData);
         }
 
         // Créer des comptes supplémentaires avec la factory
