@@ -41,6 +41,11 @@ return [
                 'format_to_use_for_docs' => env('L5_FORMAT_TO_USE_FOR_DOCS', 'json'),
 
                 /*
+                 * URL path to access the generated documentation
+                 */
+                'docs_url' => env('L5_SWAGGER_DOCS_URL', '/docs'),
+
+                /*
                  * Absolute paths to directory containing the swagger annotations are stored.
                  */
                 'annotations' => [
@@ -198,7 +203,7 @@ return [
          * Edit to trust the proxy's ip address - needed for AWS Load Balancer
          * string[]
          */
-        'proxy' => false,
+        'proxy' => true,
 
         /*
          * Configs plugin allows to fetch external configs instead of passing them to SwaggerUIBundle.

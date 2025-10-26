@@ -79,3 +79,5 @@ databases:
 redis:
   - name: api-banque-redis
     plan: starter
+
+

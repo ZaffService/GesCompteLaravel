@@ -27,6 +27,10 @@ use Illuminate\Support\Facades\Cache;
  * @OA\Server(
  *     url="http://api.moustapha.seck.com",
  *     description="Serveur de production"
+ * ),
+ * @OA\Server(
+ *     url="https://moustapha-seck.onrender.com",
+ *     description="Serveur de production"
  * )
  *
  * @OA\Schema(
