@@ -40,6 +40,11 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'api_users',
+        ],
     ],
 
     /*
@@ -63,6 +68,23 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
+        ],
+
+        // Provider personnalisé pour l'API qui gère admins et clients
+        'api_users' => [
+            'driver' => App\Providers\ApiUserProvider::class,
+        ],
+
+        // Provider pour les clients
+        'clients' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Client::class,
+        ],
+
+        // Provider pour les admins
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class,
         ],
 
         // 'users' => [

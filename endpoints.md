@@ -1,57 +1,91 @@
-# 🧪 GUIDE COMPLET DE TEST API BANQUE - POSTMAN
-
-5 clients de test avec codes :
-
-amadou.diallo@example.com / password123 / Code: ABC123
-fatou.sow@example.com / password123 / Code: DEF456
-moussa.ndiaye@example.com / password123 / Code: GHI789
-aissatou.ba@example.com / password123 / Code: JKL012
-cheikh.sy@example.com / password123 / Code: MNO345
+# 🎓 GUIDE PÉDAGOGIQUE - API BANQUE LARAVEL
 
 
-## 📋 Vue d'ensemble
 
-Ce guide vous explique **ÉTAPE PAR ÉTAPE** comment tester l'API Banque avec Postman. Tous les endpoints sont implémentés et testables.
+Nous allons nous concentrer sur **l'US 2.0 : Lister tous les comptes** avec tous ses scénarios :
+- Admin peut récupérer la liste de tous les comptes
+- Client peut récupérer la liste de ses comptes
 
 **Base URL :** `http://127.0.0.1:8000/api/v1`
 
-## 🚀 ÉTAPE 1 : Préparation de l'environnement
+---
 
-### 1.1 Démarrer le serveur Laravel
-Ouvrez un terminal et exécutez :
+## 📚 PRÉPARATION DE VOTRE ENVIRONNEMENT DE TRAVAIL
+
+### Étape 1 : Démarrer votre serveur Laravel
+Ouvrez un terminal et exécutez cette commande :
 ```bash
-cd /chemin/vers/votre/projet/Laravel-10
-php artisan serve
+php artisan serve --host=127.0.0.1 --port=8000
 ```
-Le serveur démarre sur `http://127.0.0.1:8000`
+**Résultat attendu :** Le serveur démarre et affiche `Starting Laravel development server: http://127.0.0.1:8000`
 
-### 1.2 Ouvrir Postman
-- Lancez Postman
-- Créez une nouvelle collection : **"API Banque Tests"**
-
-### 1.3 Configurer les variables d'environnement
-Dans Postman :
-1. Cliquez sur **"Environments"** (environnements)
-2. Créez un nouvel environnement : **"API Banque Dev"**
-3. Ajoutez ces variables :
+### Étape 2 : Préparer Postman
+1. **Lancez Postman**
+2. **Créez une nouvelle collection** nommée **"API Banque - Tests US 2.0"**
+3. **Créez un environnement** nommé **"API Banque Dev"** avec ces variables :
    - `base_url` = `http://127.0.0.1:8000/api/v1`
    - `token` = (laisser vide pour l'instant)
 
-### 1.4 Headers par défaut
-Pour chaque requête, ajoutez ces headers :
+### Étape 3 : Headers par défaut
+Pour chaque requête, ajoutez toujours ces headers :
 - `Accept`: `application/json`
 - `Content-Type`: `application/json`
 
-## 🔐 ÉTAPE 2 : Authentification
+---
 
-### 2.1 Créer la requête de connexion
-Dans Postman :
+## 🔐 AUTHENTIFICATION - PREMIÈRE ÉTAPE OBLIGATOIRE
+
+**Avant de pouvoir tester l'US 2.0, vous devez vous authentifier !**
+
+### 🔑 Connexion en tant qu'Admin
+
+**L'admin peut se connecter sans code de sécurité :**
+
+**Dans Postman :**
 1. **Nouvelle requête** dans votre collection
 2. **Méthode** : `POST`
 3. **URL** : `{{base_url}}/auth/login`
-4. **Headers** : Ajoutez `Accept` et `Content-Type`
-5. **Body** : `raw` → `JSON`
-6. **Collez ce JSON** :
+4. **Body** (raw → JSON) :
+```json
+{
+  "email": "admin@banque.com",
+  "password": "admin123"
+}
+```
+
+**Cliquez sur "Send"**
+
+**Réponse attendue :**
+```json
+{
+  "success": true,
+  "message": "Connexion réussie",
+  "data": {
+    "user": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Administrateur",
+      "email": "admin@banque.com"
+    },
+    "access_token": "1|admin_token_here...",
+    "token_type": "Bearer",
+    "expires_in": 3600
+  }
+}
+```
+
+**En tant qu'admin, vous pouvez voir TOUS les comptes de la banque !**
+
+### 👤 Connexion en tant que Client
+
+**Les clients doivent fournir un code de sécurité pour la première connexion :**
+
+**Exemple concret avec le Client 1 : Amadou Diallo**
+
+**Dans Postman :**
+1. **Nouvelle requête** dans votre collection
+2. **Méthode** : `POST`
+3. **URL** : `{{base_url}}/auth/login`
+4. **Body** (raw → JSON) :
 ```json
 {
   "email": "amadou.diallo@example.com",
@@ -60,9 +94,14 @@ Dans Postman :
 }
 ```
 
-### 2.2 Exécuter la connexion
-1. Cliquez sur **"Send"**
-2. Vous devriez recevoir :
+**Cliquez sur "Send"**
+
+**Que se passe-t-il ?**
+- Laravel vérifie l'email et le mot de passe
+- Pour la première connexion, il vérifie aussi le code de sécurité
+- Si tout est correct, il génère un token d'accès
+
+**Réponse attendue :**
 ```json
 {
   "success": true,
@@ -81,180 +120,51 @@ Dans Postman :
 }
 ```
 
-### 2.3 Sauvegarder le token
+**Action importante :**
 1. Copiez le `access_token` de la réponse
-2. Dans les variables d'environnement Postman :
-   - Variable `token` = collez le token copié
-3. **Toutes les futures requêtes** utiliseront `Authorization: Bearer {{token}}`
+2. Collez-le dans la variable `token` de votre environnement Postman
+3. **Toutes vos futures requêtes** devront avoir le header : `Authorization: Bearer {{token}}`
 
-## 📊 ÉTAPE 3 : Tester les comptes
+**En tant que client, vous ne verrez que vos propres comptes.**
 
-### 3.1 Lister tous les comptes
-**Nouvelle requête :**
+---
+
+## 🎯 US 2.0 : LISTER TOUS LES COMPTES - ANALYSE DÉTAILLÉE
+
+Maintenant que vous êtes authentifié, testons l'endpoint principal de l'US 2.0 !
+
+### Scénario 1 : Client récupère ses propres comptes
+
+**Règle métier :** Un client ne voit que ses propres comptes, pas ceux des autres clients.
+
+**Dans Postman :**
 - **Méthode** : `GET`
 - **URL** : `{{base_url}}/comptes`
-- **Headers** : `Authorization: Bearer {{token}}`
+- **Header** : `Authorization: Bearer {{token}}`
 
-**Cliquez Send** → Vous verrez tous les comptes (58 comptes)
+**Cliquez sur "Send"**
 
-### 3.2 Lister avec pagination
-**Modifier l'URL :**
-```
-{{base_url}}/comptes?page=1&limit=5
-```
-→ Seulement 5 comptes par page
+**Que se passe-t-il dans le code ?**
+1. Le middleware `auth:api` vérifie votre token
+2. Le middleware `RoleMiddleware` détermine que vous êtes un `Client`
+3. Dans `CompteController@index()`, la ligne :
+   ```php
+   if ($user instanceof Client) {
+       $query->where('client_id', $user->id); // Filtre automatique !
+   }
+   ```
+   Cette ligne filtre automatiquement pour ne montrer que les comptes du client connecté.
 
-### 3.3 Filtrer par statut actif
-**URL :**
-```
-{{base_url}}/comptes?statut=actif&limit=3
-```
-→ Comptes actifs uniquement
+**Résultat :** Vous ne verrez que les comptes d'Amadou Diallo (environ 2-3 comptes).
 
-### 3.4 Filtrer par type épargne
-**URL :**
-```
-{{base_url}}/comptes?type=epargne&limit=3
-```
-→ Comptes épargne uniquement
+### Scénario 2 : Tester avec un autre client
 
-### 3.5 Recherche par nom
-**URL :**
-```
-{{base_url}}/comptes?search=Diallo
-```
-→ Comptes du client "Diallo"
-
-### 3.6 Tri par solde décroissant
-**URL :**
-```
-{{base_url}}/comptes?sort=solde&order=desc&limit=5
-```
-→ Comptes triés par solde (plus riches d'abord)
-
-## 🔍 ÉTAPE 4 : Détails d'un compte spécifique
-
-### 4.1 Récupérer un compte par ID
-**Nouvelle requête :**
-- **Méthode** : `GET`
-- **URL** : `{{base_url}}/comptes/550e8400-e29b-41d4-a716-446655440010`
-- **Headers** : `Authorization: Bearer {{token}}`
-
-**Note :** Utilisez un ID de compte que vous avez vu dans la liste précédente
-
-## ➕ ÉTAPE 5 : Créer un nouveau compte
-
-### 5.1 Créer un compte pour client existant
-**Nouvelle requête :**
-- **Méthode** : `POST`
-- **URL** : `{{base_url}}/comptes`
-- **Headers** : `Authorization: Bearer {{token}}`
-- **Body** (JSON) :
-```json
-{
-  "type": "cheque",
-  "soldeInitial": 500000,
-  "devise": "FCFA",
-  "client": {
-    "id": "550e8400-e29b-41d4-a716-446655440001"
-  }
-}
-```
-
-### 5.2 Créer un compte avec nouveau client
-**Body alternatif :**
-```json
-{
-  "type": "epargne",
-  "soldeInitial": 1000000,
-  "devise": "FCFA",
-  "client": {
-    "titulaire": "Marie Dupont",
-    "email": "marie.dupont@example.com",
-    "telephone": "+221771234568",
-    "adresse": "Dakar, Sénégal"
-  }
-}
-```
-
-## ✏️ ÉTAPE 6 : Modifier un compte
-
-### 6.1 Modifier les informations client
-**Nouvelle requête :**
-- **Méthode** : `PATCH`
-- **URL** : `{{base_url}}/comptes/550e8400-e29b-41d4-a716-446655440010`
-- **Headers** : `Authorization: Bearer {{token}}`
-- **Body** :
-```json
-{
-  "titulaire": "Amadou Diallo Junior",
-  "informationsClient": {
-    "telephone": "+221771234569",
-    "email": "amadou.junior@example.com"
-  }
-}
-```
-
-## 🚫 ÉTAPE 7 : Bloquer un compte
-
-### 7.1 Bloquer un compte épargne actif
-**Nouvelle requête :**
-- **Méthode** : `POST`
-- **URL** : `{{base_url}}/comptes/{id-compte-actif-epargne}/bloquer`
-- **Headers** : `Authorization: Bearer {{token}}`
-- **Body** :
-```json
-{
-  "motif": "Activité suspecte détectée",
-  "duree": 30,
-  "unite": "mois"
-}
-```
-
-## ✅ ÉTAPE 8 : Débloquer un compte
-
-### 8.1 Débloquer un compte bloqué
-**Nouvelle requête :**
-- **Méthode** : `POST`
-- **URL** : `{{base_url}}/comptes/{id-compte-bloque}/debloquer`
-- **Headers** : `Authorization: Bearer {{token}}`
-- **Body** :
-```json
-{
-  "motif": "Vérification complétée"
-}
-```
-
-## 🗑️ ÉTAPE 9 : Supprimer un compte
-
-### 9.1 Supprimer un compte (soft delete)
-**Nouvelle requête :**
-- **Méthode** : `DELETE`
-- **URL** : `{{base_url}}/comptes/{id-compte-a-supprimer}`
-- **Headers** : `Authorization: Bearer {{token}}`
-
-## 🔄 ÉTAPE 10 : Rafraîchir le token
-
-### 10.1 Rafraîchir avant expiration
-**Nouvelle requête :**
-- **Méthode** : `POST`
-- **URL** : `{{base_url}}/auth/refresh`
-- **Headers** : `Authorization: Bearer {{token}}`
-
-## 🚪 ÉTAPE 11 : Déconnexion
-
-### 11.1 Se déconnecter
-**Nouvelle requête :**
+**Déconnectez-vous d'abord :**
 - **Méthode** : `POST`
 - **URL** : `{{base_url}}/auth/logout`
-- **Headers** : `Authorization: Bearer {{token}}`
+- **Header** : `Authorization: Bearer {{token}}`
 
-## 👥 ÉTAPE 12 : Tester avec différents utilisateurs
-
-### 12.1 Se connecter avec un autre client
-Répétez l'étape 2.1 avec ces identifiants :
-
-**Client 2 :**
+**Reconnectez-vous avec Client 2 : Fatou Sow**
 ```json
 {
   "email": "fatou.sow@example.com",
@@ -263,504 +173,296 @@ Répétez l'étape 2.1 avec ces identifiants :
 }
 ```
 
-**Client 3 :**
-```json
-{
-  "email": "moussa.ndiaye@example.com",
-  "password": "password123",
-  "code": "GHI789"
+**Testez à nouveau :**
+- **GET** `{{base_url}}/comptes`
+- **Header** : `Authorization: Bearer {{token}}`
+
+**Résultat :** Vous verrez maintenant les comptes de Fatou Sow uniquement !
+
+**Leçon importante :** L'isolation des données fonctionne parfaitement. Chaque client ne voit que ses comptes.
+
+### Scénario 3 : Pagination et limites
+
+**Testez la pagination :**
+- **URL** : `{{base_url}}/comptes?page=1&limit=2`
+
+**Résultat :** Seulement 2 comptes par page, avec des métadonnées de pagination.
+
+### Scénario 4 : Filtres avancés
+
+**Filtrer par statut actif :**
+- **URL** : `{{base_url}}/comptes?statut=actif`
+
+**Filtrer par type épargne :**
+- **URL** : `{{base_url}}/comptes?type=epargne`
+
+**Combiner les filtres :**
+- **URL** : `{{base_url}}/comptes?statut=actif&type=epargne&limit=5`
+
+### Scénario 5 : Recherche par nom
+
+**Rechercher vos propres comptes :**
+- **URL** : `{{base_url}}/comptes?search=Sow`
+
+**Que fait cette recherche ?**
+Dans le code, la méthode `recherche()` :
+```php
+public function scopeRecherche($query, $search) {
+    return $query->where(function ($q) use ($search) {
+        $q->where('numero_compte', 'like', "%{$search}%")
+          ->orWhereHas('client', function ($clientQuery) use ($search) {
+              $clientQuery->where('titulaire', 'like', "%{$search}%");
+          });
+    });
 }
 ```
 
-**Client 4 :**
-```json
-{
-  "email": "aissatou.ba@example.com",
-  "password": "password123",
-  "code": "JKL012"
-}
-```
+### Scénario 6 : Tri des résultats
 
-**Client 5 :**
-```json
-{
-  "email": "cheikh.sy@example.com",
-  "password": "password123",
-  "code": "MNO345"
-}
-```
+**Trier par solde décroissant :**
+- **URL** : `{{base_url}}/comptes?sort=solde&order=desc`
 
-### 12.2 Vérifier l'isolation des données
-- Connecté en Client 1 → voit seulement ses comptes
-- Connecté en Client 2 → voit seulement ses comptes
-- **Admin** pourrait voir tous les comptes (pas encore implémenté)
-
-## ⚠️ ÉTAPE 13 : Tester les erreurs
-
-### 13.1 Token invalide
-**Supprimez ou modifiez le token** dans les variables d'environnement → Erreur 401
-
-### 13.2 Accès non autorisé
-**Essayez d'accéder au compte d'un autre client** → Erreur 403
-
-### 13.3 Ressource non trouvée
-**URL avec ID inexistant** → Erreur 404
-
-### 13.4 Données invalides
-**Body avec email déjà utilisé** → Erreur 422
-
-### 13.5 Limite de taux dépassée
-**Faites plus de 10 requêtes** dans la même journée → Erreur 429
-
-## 📋 DONNÉES DE TEST DISPONIBLES
-
-### Clients de test (5 premiers avec codes connus) :
-1. **Amadou Diallo** - `amadou.diallo@example.com` - Code: `ABC123`
-2. **Fatou Sow** - `fatou.sow@example.com` - Code: `DEF456`
-3. **Moussa Ndiaye** - `moussa.ndiaye@example.com` - Code: `GHI789`
-4. **Aïssatou Ba** - `aissatou.ba@example.com` - Code: `JKL012`
-5. **Cheikh Sy** - `cheikh.sy@example.com` - Code: `MNO345`
-
-### Statistiques des comptes :
-- **Total** : 58 comptes
-- **Actifs** : 18 comptes
-- **Bloqués** : 21 comptes
-- **Fermés** : 19 comptes
-- **Épargne** : 31 comptes
-- **Chèque** : 27 comptes
-
-## 🎯 WORKFLOW COMPLET DE TEST
-
-1. ✅ **Démarrer serveur** (`php artisan serve`)
-2. ✅ **Créer collection Postman** avec variables
-3. ✅ **Login** avec client 1
-4. ✅ **Sauvegarder token**
-5. ✅ **Lister comptes** (tous, filtrés, paginés)
-6. ✅ **Voir détail** d'un compte
-7. ✅ **Créer compte** (client existant + nouveau)
-8. ✅ **Modifier compte**
-9. ✅ **Bloquer compte** (épargne actif)
-10. ✅ **Débloquer compte**
-11. ✅ **Supprimer compte**
-12. ✅ **Changer d'utilisateur** et vérifier isolation
-13. ✅ **Tester erreurs** (401, 403, 404, 422, 429)
-14. ✅ **Logout**
-
-## 💡 ASTUCES POSTMAN
-
-- **Sauvegardez les IDs** des comptes créés pour les tests suivants
-- **Utilisez les variables** `{{base_url}}` et `{{token}}`
-- **Testez les filtres** combinés : `?statut=actif&type=epargne&page=1`
-- **Vérifiez toujours** la réponse avant de continuer
-- **Les erreurs sont normales** - elles permettent de comprendre l'API
+**Trier par date de création :**
+- **URL** : `{{base_url}}/comptes?sort=dateCreation&order=asc`
 
 ---
 
-**🚀 Vous êtes maintenant prêt à tester l'API complète !** Commencez par l'étape 1 et suivez le guide pas à pas.
+## 🔍 SCÉNARIO ADMIN - MAINTENANT DISPONIBLE !
 
-## 📚 Endpoints Disponibles
+**L'admin peut maintenant voir TOUS les comptes de la banque !**
 
-### 1. 🔓 Authentification (Routes publiques)
+### Testez avec l'admin :
 
-#### POST `/auth/login`
-Connexion utilisateur avec vérification de code (première connexion).
-
-**Headers :**
-```
-Accept: application/json
-Content-Type: application/json
-```
-
-**Body (JSON) :**
+**Connectez-vous en tant qu'admin :**
 ```json
 {
-  "email": "client1@example.com",
-  "password": "password123",
-  "code": "ABC123"
+  "email": "admin@banque.com",
+  "password": "admin123"
 }
 ```
 
-**Exemple de test :**
-```json
-{
-  "email": "client1@example.com",
-  "password": "password123"
+**Puis testez :**
+- **GET** `{{base_url}}/comptes`
+- **Header** : `Authorization: Bearer {{token}}`
+
+**Résultat :** Vous verrez TOUS les comptes de TOUS les clients (pas de filtrage automatique).
+
+**Que se passe-t-il dans le code ?**
+Dans `CompteController@index()`, la condition :
+```php
+if ($user instanceof Client) {
+    $query->where('client_id', $user->id); // Filtre SEULEMENT pour les clients
 }
 ```
-
-**Réponse de succès :**
-```json
-{
-  "success": true,
-  "message": "Connexion réussie",
-  "data": {
-    "user": {
-      "id": "uuid",
-      "titulaire": "Client Test 1",
-      "email": "client1@example.com",
-      "telephone": "+221771234567"
-    },
-    "access_token": "token_here",
-    "token_type": "Bearer",
-    "expires_in": 3600
-  }
-}
-```
-
-**⚠️ Note :** Pour la première connexion, le champ `code` est requis. Le code est généré automatiquement lors de la création du client.
-
-#### POST `/auth/refresh`
-Rafraîchir le token d'accès.
-
-**Headers :**
-```
-Accept: application/json
-Content-Type: application/json
-Authorization: Bearer {token}
-```
-
-**Body :** Aucun
-
-#### POST `/auth/logout`
-Déconnexion et révocation du token.
-
-**Headers :**
-```
-Accept: application/json
-Content-Type: application/json
-Authorization: Bearer {token}
-```
-
-### 2. 🔒 Comptes (Routes protégées)
-
-#### GET `/comptes`
-Lister tous les comptes avec filtres et pagination.
-
-**Headers :**
-```
-Accept: application/json
-Authorization: Bearer {token}
-```
-
-**Query Parameters (optionnels) :**
-- `page`: numéro de page (défaut: 1)
-- `limit`: éléments par page (défaut: 10, max: 100)
-- `type`: `epargne` ou `cheque`
-- `statut`: `actif`, `bloque`, ou `ferme`
-- `search`: recherche par titulaire ou numéro
-- `sort`: tri par `dateCreation`, `solde`, `titulaire`
-- `order`: `asc` ou `desc`
-
-**Exemples de test :**
-
-1. **Tous les comptes actifs :**
-   ```
-   GET /api/v1/comptes?statut=actif&limit=5
-   ```
-
-2. **Comptes épargne triés par solde :**
-   ```
-   GET /api/v1/comptes?type=epargne&sort=solde&order=desc
-   ```
-
-3. **Recherche par titulaire :**
-   ```
-   GET /api/v1/comptes?search=Diallo
-   ```
-
-**Réponse :**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "uuid",
-      "numeroCompte": "C00123456",
-      "titulaire": "Amadou Diallo",
-      "type": "epargne",
-      "solde": 1250000,
-      "devise": "FCFA",
-      "dateCreation": "2023-03-15T00:00:00Z",
-      "statut": "bloque",
-      "motifBlocage": "Inactivité de 30+ jours",
-      "dateDebutBlocage": "2025-09-09T05:13:07Z",
-      "dateFinBlocage": "2026-01-24T05:13:07Z",
-      "metadata": {
-        "derniereModification": "2025-10-14T05:13:07Z",
-        "version": 2
-      }
-    }
-  ],
-  "pagination": {
-    "currentPage": 1,
-    "totalPages": 6,
-    "totalItems": 58,
-    "itemsPerPage": 10,
-    "hasNext": true,
-    "hasPrevious": false
-  },
-  "links": {
-    "self": "/api/v1/comptes?page=1&limit=10",
-    "first": "/api/v1/comptes?page=1&limit=10",
-    "last": "/api/v1/comptes?page=6&limit=10",
-    "next": "/api/v1/comptes?page=2&limit=10",
-    "prev": null
-  }
-}
-```
-
-#### GET `/comptes/{compteId}`
-Récupérer un compte spécifique.
-
-**Headers :**
-```
-Accept: application/json
-Authorization: Bearer {token}
-```
-
-**Exemple :**
-```
-GET /api/v1/comptes/uuid-du-compte
-```
-
-#### POST `/comptes`
-Créer un nouveau compte.
-
-**Headers :**
-```
-Accept: application/json
-Content-Type: application/json
-Authorization: Bearer {token}
-```
-
-**Body :**
-```json
-{
-  "type": "cheque",
-  "soldeInitial": 500000,
-  "devise": "FCFA",
-  "client": {
-    "id": "uuid-client-existant",
-    "titulaire": "Nouveau Client",
-    "email": "nouveau@example.com",
-    "telephone": "+221771234568",
-    "adresse": "Dakar, Sénégal"
-  }
-}
-```
-
-**Ou pour client existant :**
-```json
-{
-  "type": "epargne",
-  "soldeInitial": 1000000,
-  "devise": "FCFA",
-  "client": {
-    "id": "uuid-client"
-  }
-}
-```
-
-#### PATCH `/comptes/{compteId}`
-Mettre à jour les informations du client associé au compte.
-
-**Headers :**
-```
-Accept: application/json
-Content-Type: application/json
-Authorization: Bearer {token}
-```
-
-**Body :**
-```json
-{
-  "titulaire": "Nouveau Nom",
-  "informationsClient": {
-    "telephone": "+221771234569",
-    "email": "nouveau.email@example.com"
-  }
-}
-```
-
-#### DELETE `/comptes/{compteId}`
-Supprimer un compte (soft delete).
-
-**Headers :**
-```
-Accept: application/json
-Authorization: Bearer {token}
-```
-
-#### POST `/comptes/{compteId}/bloquer`
-Bloquer un compte épargne actif.
-
-**Headers :**
-```
-Accept: application/json
-Content-Type: application/json
-Authorization: Bearer {token}
-```
-
-**Body :**
-```json
-{
-  "motif": "Activité suspecte détectée",
-  "duree": 30,
-  "unite": "mois"
-}
-```
-
-#### POST `/comptes/{compteId}/debloquer`
-Débloquer un compte bloqué.
-
-**Headers :**
-```
-Accept: application/json
-Content-Type: application/json
-Authorization: Bearer {token}
-```
-
-**Body :**
-```json
-{
-  "motif": "Vérification complétée"
-}
-```
-
-## 🧪 Données de Test
-
-### Clients disponibles pour les tests :
-
-1. **Client Test 1**
-   - Email: `client1@example.com`
-   - Password: `password123`
-   - Code: `ABC123` (pour première connexion)
-
-2. **Client Test 2**
-   - Email: `client2@example.com`
-   - Password: `password123`
-   - Code: `DEF456`
-
-3. **Client Test 3**
-   - Email: `client3@example.com`
-   - Password: `password123`
-   - Code: `GHI789`
-
-### Comptes de test :
-- **58 comptes** créés automatiquement
-- **18 comptes actifs**, **21 bloqués**, **19 fermés**
-- **31 comptes épargne**, **27 comptes chèque**
-- Soldes variant de 10 000 à 1 000 000 FCFA
-
-## 🚀 Comment Tester avec Postman
-
-### 1. Configuration de l'environnement Postman
-
-Créer un nouvel environnement avec :
-```json
-{
-  "base_url": "http://127.0.0.1:8000/api/v1",
-  "token": ""
-}
-```
-
-### 2. Collection Postman
-
-Importer cette collection ou créer manuellement :
-
-#### 📁 **API Banque**
-- **Auth**
-  - `POST {{base_url}}/auth/login`
-  - `POST {{base_url}}/auth/refresh`
-  - `POST {{base_url}}/auth/logout`
-
-- **Comptes**
-  - `GET {{base_url}}/comptes`
-  - `GET {{base_url}}/comptes/:id`
-  - `POST {{base_url}}/comptes`
-  - `PATCH {{base_url}}/comptes/:id`
-  - `DELETE {{base_url}}/comptes/:id`
-  - `POST {{base_url}}/comptes/:id/bloquer`
-  - `POST {{base_url}}/comptes/:id/debloquer`
-
-### 3. Workflow de test typique
-
-1. **Login :**
-   ```
-   POST {{base_url}}/auth/login
-   Body: {"email": "client1@example.com", "password": "password123", "code": "ABC123"}
-   ```
-   → Copier le token dans les variables d'environnement
-
-2. **Lister les comptes :**
-   ```
-   GET {{base_url}}/comptes
-   Header: Authorization: Bearer {{token}}
-   ```
-
-3. **Tester les filtres :**
-   ```
-   GET {{base_url}}/comptes?statut=actif&type=epargne&limit=3
-   Header: Authorization: Bearer {{token}}
-   ```
-
-4. **Créer un compte :**
-   ```
-   POST {{base_url}}/comptes
-   Header: Authorization: Bearer {{token}}
-   Body: {...}
-   ```
-
-## ⚠️ Gestion des Erreurs
-
-### Codes d'erreur courants :
-
-- **401 Unauthorized** : Token manquant ou invalide
-- **403 Forbidden** : Permissions insuffisantes ou accès refusé
-- **404 Not Found** : Ressource non trouvée
-- **422 Unprocessable Entity** : Données de validation invalides
-- **429 Too Many Requests** : Limite de taux dépassée (10 req/jour)
-- **500 Internal Server Error** : Erreur serveur
-
-### Structure des erreurs :
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Les données fournies sont invalides",
-    "details": {
-      "email": ["L'adresse email est déjà utilisée"]
-    }
-  }
-}
-```
-
-## 🔒 Sécurité
-
-- **Rate Limiting** : 10 requêtes par jour par utilisateur
-- **Authentification** : Laravel Sanctum avec tokens
-- **Validation** : Règles strictes pour données sensibles
-- **Soft Deletes** : Suppression logique des comptes
-- **Logs** : Utilisateurs dépassant les limites sont loggés
-
-## 📊 Statistiques de l'API
-
-- **Routes implémentées** : 10 endpoints
-- **Modèles** : Client, Compte
-- **Middlewares** : RateLimit, Role, ApiResponse
-- **Resources** : CompteResource, CompteCollection
-- **Validations** : StoreClientRequest, StoreCompteRequest
-- **Tests data** : 20 clients + 58 comptes
-
-## 🎯 Prochaines Étapes
-
-Une fois ces endpoints testés et validés :
-1. Implémenter les transactions
-2. Ajouter les jobs pour archivage Neon
-3. Configurer Swagger pour documentation interactive
-4. Déployer sur Vercel
+Cette ligne ne s'applique qu'aux `Client`, donc l'admin voit tout !
 
 ---
 
-**✨ Prêt à tester !** Lancez `php artisan serve` et commencez par l'authentification.
+## 📖 COMPRENDRE SWAGGER UI - VOTRE ALLIÉ PÉDAGOGIQUE
+
+**Swagger UI est votre meilleur ami pour comprendre et tester l'API !**
+
+### Comment accéder à Swagger UI
+
+1. **Votre serveur doit tourner** (`php artisan serve`)
+2. **Ouvrez votre navigateur**
+3. **Allez à l'URL :** `http://127.0.0.1:8000/api/documentation`
+
+### Interface Swagger - Guide pas à pas
+
+#### 1. **Page d'accueil Swagger**
+- Vous voyez le titre : "API Banque - Documentation"
+- Version : "1.0.0"
+- Description de l'API
+
+#### 2. **Authentification dans Swagger**
+- Cliquez sur le bouton **"Authorize"** (en haut à droite)
+- Dans la fenêtre qui s'ouvre, entrez : `Bearer VOTRE_TOKEN`
+- **Important :** Remplacez `VOTRE_TOKEN` par le token réel que vous avez récupéré avec Postman ou par l'authentification depuis l'interface de swagger
+
+#### 3. **Explorer les endpoints**
+
+**Cliquez sur "Comptes" dans le menu gauche**
+
+Vous verrez tous les endpoints liés aux comptes :
+
+- **GET /api/v1/comptes** ← C'est l'US 2.0 !
+- GET /api/v1/comptes/{compteId}
+- POST /api/v1/comptes
+- etc.
+
+#### 4. **Connexion via Swagger UI (Authentification)**
+
+**Pour l'admin (pas de code requis) :**
+1. **Cliquez sur la ligne** `POST /api/v1/auth/login`
+2. **La documentation se déroule** - lisez-la attentivement !
+3. **Cliquez sur "Try it out"** (bouton bleu en haut à droite)
+4. **Remplissez le body :**
+   ```json
+   {
+     "email": "admin@banque.com",
+     "password": "admin123"
+   }
+   ```
+   **Note :** Pas de champ "code" pour l'admin !
+
+5. **Cliquez sur "Execute"** (bouton vert en bas)
+
+**Résultat :**
+- **Request URL** : `http://127.0.0.1:8000/api/v1/auth/login`
+- **Server response** : Code 200 avec le token JWT
+
+**⚠️ Important :** Dans Swagger UI, vérifiez que le serveur sélectionné est `http://127.0.0.1:8000` (menu déroulant en haut). Si c'est `http://api.moustapha.seck.com`, changez-le !
+
+**Copiez le token de la réponse (sans "Bearer") et utilisez-le pour autoriser les futures requêtes !**
+
+**⚠️ Dans Swagger UI, collez simplement le token brut (sans "Bearer") - Swagger ajoutera automatiquement le préfixe !**
+
+**Exemple de token à coller :**
+```
+eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiZjQ2Y2M3ZmNjYjQ2ZWQxNDFmMDE0YjkxNDY3NTBmYTEyMDRiYjM0ZjliNTM3YmJlYjJlMTdmNDA2OTMwNjhmNDAzODAzYzU5YWEzMzRmMWIiLCJpYXQiOjE3NjE0NTI4OTUuNDk3MzQ3LCJuYmYiOjE3NjE0NTI4OTUuNDk3MzQ3LCJleHAiOjE3NzcxNzc2OTUuNDk0NTAxLCJzdWIiOiIxIiwic2NvcGVzIjpbXX0.dsRSvqAJrKjI9hKq7vfLa7uC05SvFgnMttGYHn8xpbH0eMhya_sZavOlGWsiAFcYcPnAGB59tm8JR63XQYwB3tuOJCs66bMey7jh_sXE9QZ2r2uRIoMOfO2TpJH6NyxFxuGJVv1rxul2Jy_auMYTgaCCOAEebPjt6fNNJ4iQHBy1vz4gm5dypkS683eknSN3IYPzz4oqa95vxbWDAfcYntbjCyggRiRofHtfNewaKzG-0T6dQk7NaBTxJApgPNCjq14uVa_TwS1xtdN2f9o8f2Y-Nimimr6FgskCsNHu_VXkpsGPD0HWfXjg6OUNvbqsjscYByUsdLItRUEflzhqjr_N-KkNKcFdA2ox-fTmf1BE03Ihjbk9E9_2sRuUZFIBTSY_nRW9Li91xjg6b4h-tteGyQXzrRVXjDKg0qUdQgY_yswbel2MW8OyWgZVcOjSBeqnZEfHR4wd_6ZvLZt6Yj8w-yrwcIxdB_-TGm60cDyzXxeWEPLDZn3OcFTznKtVX3Wj_urzX8sES8QJgjaaQl5duf1WCZKCHyeSjG1UiyKWM4luFHbaHiJN1IGfOq7FRMNot-GdiR_LQh0WVEUrkyz9P6t9qqOIfy_ShtjttuOhAWVxIDsjh7LiKfgiTU_zSM3ZFaO6fxooU7Z5ITCmpR3CaM1xaG1bfdahJHTI_W4
+```
+
+#### 5. **Autoriser Swagger avec le token JWT**
+
+**Avant de tester les endpoints protégés, vous devez autoriser Swagger :**
+
+1. **Cliquez sur le bouton "Authorize"** (en haut à droite, icône cadenas)
+2. **Dans la fenêtre popup :**
+   - **Value** : Collez votre token JWT (sans "Bearer")
+   - **Cliquez sur "Authorize"**
+3. **Fermez la popup**
+
+**Maintenant Swagger est autorisé pour tous les endpoints protégés !**
+
+#### 6. **Tester GET /api/v1/comptes dans Swagger**
+
+1. **Cliquez sur la ligne** `GET /api/v1/comptes`
+2. **La documentation se déroule** - lisez-la attentivement !
+3. **Cliquez sur "Try it out"** (bouton bleu en haut à droite)
+4. **Paramètres optionnels :**
+   - page: 1
+   - limit: 10
+   - type: (vide)
+   - statut: (vide)
+   - search: (vide)
+   - sort: dateCreation
+   - order: desc
+
+5. **Cliquez sur "Execute"** (bouton vert en bas)
+
+**Résultat :**
+- **Request URL** : `http://127.0.0.1:8000/api/v1/comptes`
+- **Server response** : Code 200 avec vos données JSON
+
+**⚠️ Rappel :** Assurez-vous que le serveur `http://127.0.0.1:8000` est sélectionné dans Swagger UI !
+
+#### 5. **Comprendre la réponse Swagger**
+
+Swagger vous montre :
+- **Curl** : La commande curl équivalente
+- **Request URL** : L'URL complète appelée
+- **Response body** : Le JSON retourné
+- **Response code** : 200 (succès)
+
+#### 6. **Tester les paramètres dans Swagger**
+
+**Essayez différents paramètres :**
+- `statut: actif` → Voir seulement les comptes actifs
+- `type: epargne` → Voir seulement les comptes épargne
+- `limit: 3` → Voir seulement 3 comptes
+- `search: Diallo` → Rechercher par nom
+
+#### 7. **Comprendre les erreurs dans Swagger**
+
+**Testez une erreur :**
+1. **Déconnectez-vous** dans Swagger (bouton "Logout" dans Authorize)
+2. **Relancez la requête GET /api/v1/comptes**
+3. **Résultat :** Erreur 401 Unauthorized
+
+**Leçon :** Swagger montre clairement les codes d'erreur et leurs significations.
+
+---
+
+## 🧪 EXERCICES PRATIQUES - METTEZ EN PRATIQUE !
+
+### Exercice 1 : Exploration complète des comptes d'un client
+1. Connectez-vous avec `amadou.diallo@example.com`
+2. Listez tous ses comptes
+3. Filtrez par comptes actifs
+4. Filtrez par comptes épargne
+5. Recherchez "Diallo"
+6. Triez par solde décroissant
+
+### Exercice 2 : Comparaison entre clients
+1. Connectez-vous avec Client 1 → Notez le nombre de comptes
+2. Connectez-vous avec Client 2 → Notez le nombre de comptes
+3. Vérifiez qu'ils sont différents (isolation des données)
+
+### Exercice 5 : Pouvoirs de l'admin vs client
+1. Connectez-vous en tant qu'admin → Notez le nombre TOTAL de comptes
+2. Connectez-vous avec un client → Notez le nombre de comptes du client
+3. Vérifiez que l'admin voit beaucoup plus de comptes
+4. Testez les filtres en tant qu'admin (devrait fonctionner sur tous les comptes)
+
+### Exercice 3 : Maîtrise de Swagger
+1. Ouvrez Swagger UI
+2. Autorisez-vous avec votre token
+3. Testez tous les paramètres de filtrage
+4. Observez les réponses JSON
+5. Testez une requête sans autorisation
+
+### Exercice 4 : Comprendre la pagination
+1. Listez les comptes avec `limit=2`
+2. Notez les métadonnées de pagination
+3. Testez la page 2
+4. Vérifiez les liens `next` et `prev`
+
+---
+
+## 📊 VOS UTILISATEURS DE TEST
+
+### 👑 Administrateur
+| Rôle | Email | Mot de passe | Code requis |
+|------|-------|--------------|-------------|
+| Admin | `admin@banque.com` | `admin123` | ❌ Non |
+
+**L'admin voit TOUS les comptes de la banque.**
+
+### 👥 Clients
+| Client | Email | Mot de passe | Code | Nombre de comptes |
+|--------|-------|--------------|------|-------------------|
+| Amadou Diallo | `amadou.diallo@example.com` | `password123` | `ABC123` | 2-3 |
+| Fatou Sow | `fatou.sow@example.com` | `password123` | `DEF456` | 2-3 |
+| Moussa Ndiaye | `moussa.ndiaye@example.com` | `password123` | `GHI789` | 2-3 |
+| Aïssatou Ba | `aissatou.ba@example.com` | `password123` | `JKL012` | 2-3 |
+| Cheikh Sy | `cheikh.sy@example.com` | `password123` | `MNO345` | 2-3 |
+
+**Les clients ne voient que leurs propres comptes.**
+
+---
+
+## 🎓 RÉSUMÉ DES APPRENTISSAGES
+
+**Ce que vous avez appris :**
+
+1. **Authentification Laravel** : Token Bearer, middleware d'authentification
+2. **Autorisation et rôles** : Différenciation Admin/Client
+3. **Filtrage automatique** : Sécurité des données par utilisateur
+4. **API RESTful** : GET avec paramètres de requête
+5. **Pagination** : Gestion des gros volumes de données
+6. **Swagger UI** : Documentation interactive et tests intégrés
+7. **Isolation des données** : Chaque client ne voit que ses comptes
+
+**Prochaine étape :** Implémentez le rôle Admin pour voir tous les comptes !
+
+---
+
+**Bravo ! Vous maîtrisez maintenant parfaitement l'US 2.0 de votre API Banque ! 🎉**
+
+**Questions fréquentes :**
+- **"Pourquoi je ne vois pas tous les comptes ?"** → Normal ! En tant que Client, vous ne voyez que vos comptes.
+- **"Swagger ne marche pas ?"** → Vérifiez que votre serveur tourne et que vous êtes autorisé.
+- **"Token expiré ?"** → Refaites un login pour obtenir un nouveau token.
+
+**N'hésitez pas à me poser des questions si quelque chose ne fonctionne pas !** 👨‍🏫

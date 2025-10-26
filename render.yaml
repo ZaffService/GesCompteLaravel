@@ -1,0 +1,84 @@
+services:
+  - type: web
+    name: api-banque
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: APP_NAME
+        value: "API Banque"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        fromSecret: APP_URL
+      - key: APP_KEY
+        fromSecret: APP_KEY
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase: api-banque-db
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        fromDatabase: api-banque-db
+      - key: DB_USERNAME
+        fromDatabase: api-banque-db
+      - key: DB_PASSWORD
+        fromDatabase: api-banque-db
+      - key: CACHE_DRIVER
+        value: redis
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: api-banque-redis
+      - key: REDIS_PASSWORD
+        fromService:
+          type: redis
+          name: api-banque-redis
+      - key: REDIS_PORT
+        value: 6379
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        fromSecret: MAIL_HOST
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USERNAME
+        fromSecret: MAIL_USERNAME
+      - key: MAIL_PASSWORD
+        fromSecret: MAIL_PASSWORD
+      - key: MAIL_ENCRYPTION
+        value: tls
+      - key: MAIL_FROM_ADDRESS
+        fromSecret: MAIL_FROM_ADDRESS
+      - key: MAIL_FROM_NAME
+        value: "API Banque"
+      - key: L5_SWAGGER_GENERATE_ALWAYS
+        value: true
+      - key: L5_SWAGGER_CONST_HOST
+        fromSecret: APP_URL
+    buildCommand: |
+      composer install --optimize-autoloader --no-dev --no-interaction
+      php artisan key:generate --force
+      php artisan config:cache
+      php artisan route:cache
+      php artisan view:cache
+    startCommand: |
+      php artisan migrate --force
+      php artisan db:seed --force
+      php artisan passport:install --force
+      php artisan l5-swagger:generate
+      supervisord -c /etc/supervisor/conf.d/supervisord.conf
+
+databases:
+  - name: api-banque-db
+    databaseName: banque_api
+    user: banque_user
+    plan: starter
+
+redis:
+  - name: api-banque-redis
+    plan: starter

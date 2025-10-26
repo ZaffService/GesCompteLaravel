@@ -1,0 +1,79 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-banque-app
+    restart: unless-stopped
+    ports:
+      - "8081:80"       # Port externe changé pour éviter conflit avec Jenkins (8080)
+    environment:
+      - APP_NAME="API Banque"
+      - APP_ENV=production
+      - APP_KEY=${APP_KEY}
+      - APP_DEBUG=false
+      - APP_URL=http://localhost:8081
+
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=banque_api
+      - DB_USERNAME=${DB_USERNAME:-banque_user}
+      - DB_PASSWORD=${DB_PASSWORD}
+
+      - CACHE_DRIVER=redis
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=6379
+
+      - MAIL_MAILER=smtp
+      - MAIL_HOST=smtp.gmail.com
+      - MAIL_PORT=587
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_ENCRYPTION=tls
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}
+      - MAIL_FROM_NAME="API Banque"
+
+      - L5_SWAGGER_GENERATE_ALWAYS=true
+      - L5_SWAGGER_CONST_HOST=http://localhost:8081/api/v1
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./storage:/var/www/html/storage
+    networks:
+      - app-network
+
+  db:
+    image: postgres:14
+    container_name: api-banque-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=banque_api
+      - POSTGRES_USER=${DB_USERNAME:-banque_user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"      # Port externe changé pour éviter conflit avec PostgreSQL local
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: api-banque-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    ports:
+      - "6380:6379"      # Port externe changé pour éviter conflit avec Redis local
+    networks:
+      - app-network
+
+volumes:
+  db_data:
+
+networks:
+  app-network:
+    driver: bridge

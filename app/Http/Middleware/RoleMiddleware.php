@@ -25,7 +25,7 @@ class RoleMiddleware
                     'code' => 'UNAUTHENTICATED',
                     'message' => 'Authentification requise'
                 ]
-            ], 401);
+            ], Response::HTTP_UNAUTHORIZED);
         }
 
         // Vérifier le rôle de l'utilisateur
@@ -42,7 +42,7 @@ class RoleMiddleware
                         'user_role' => $userRole
                     ]
                 ]
-            ], 403);
+            ], Response::HTTP_FORBIDDEN);
         }
 
         return $next($request);
@@ -53,13 +53,22 @@ class RoleMiddleware
      */
     private function getUserRole($user): string
     {
-        // Pour cette implémentation simple, on détermine le rôle par le type de modèle
+        // Vérifier d'abord le champ role dans la table users
+        if ($user instanceof \App\Models\User && $user->role === 'admin') {
+            return 'admin';
+        }
+
+        // Puis vérifier le type de modèle
         if ($user instanceof \App\Models\Client) {
             return 'client';
         }
 
-        // TODO: Implémenter un système d'admin plus tard
-        return 'admin';
+        if ($user instanceof \App\Models\Admin) {
+            return 'admin';
+        }
+
+        // Par défaut
+        return 'client';
     }
 
     /**

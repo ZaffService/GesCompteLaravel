@@ -26,11 +26,15 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::prefix('v1')->group(function () {
     // Routes publiques (pas d'authentification requise)
     Route::post('/auth/login', [App\Http\Controllers\AuthController::class, 'login']);
-    Route::post('/auth/refresh', [App\Http\Controllers\AuthController::class, 'refresh']);
     Route::post('/auth/logout', [App\Http\Controllers\AuthController::class, 'logout']);
 
+    // Routes protégées (nécessitent un token valide)
+    Route::middleware('auth:api')->group(function () {
+        Route::post('/auth/refresh', [App\Http\Controllers\AuthController::class, 'refresh']);
+    });
+
     // Routes protégées
-    Route::middleware(['auth:api', 'App\Http\Middleware\RateLimitMiddleware', 'role:admin|client'])->group(function () {
+    Route::middleware(['auth:api', 'App\Http\Middleware\RateLimitMiddleware', 'App\Http\Middleware\RoleMiddleware:admin|client'])->group(function () {
         /**
          * @OA\Get(
          *     path="/api/v1/comptes",
