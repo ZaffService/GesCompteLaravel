@@ -23,9 +23,13 @@ fi
 echo "📦 Running database migrations..."
 php artisan migrate --force
 
-# Run database seeders
-echo "🌱 Running database seeders..."
-php artisan db:seed --force
+# Run database seeders (only in development)
+if [ "$APP_ENV" != "production" ]; then
+  echo "🌱 Running database seeders..."
+  php artisan db:seed --force
+else
+  echo "⏭️ Skipping database seeders in production environment"
+fi
 
 # Install Passport keys if not exists
 if [ ! -f storage/oauth-public.key ]; then
