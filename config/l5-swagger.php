@@ -91,7 +91,7 @@ return [
             /*
              * Edit to set the api's base path
              */
-            'base' => env('L5_SWAGGER_BASE_PATH', env('APP_URL', 'http://127.0.0.1:8000')),
+            'base' => env('L5_SWAGGER_BASE_PATH', env('APP_URL', 'https://moustapha-seck.onrender.com')),
 
             /*
              * Absolute path to directories that should be excluded from scanning
