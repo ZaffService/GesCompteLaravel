@@ -11,10 +11,6 @@
             "description": "Serveur local"
         },
         {
-            "url": "http://api.moustapha.seck.com",
-            "description": "Serveur de production"
-        },
-        {
             "url": "https://moustapha-seck.onrender.com",
             "description": "Serveur de production"
         },
