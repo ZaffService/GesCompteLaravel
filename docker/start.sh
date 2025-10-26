@@ -5,15 +5,13 @@ set -e
 
 echo "🚀 Starting API Banque Laravel Application..."
 
-# Wait for database to be ready (only in development)
-if [ "$APP_ENV" != "production" ]; then
-  echo "⏳ Waiting for database connection..."
-  until pg_isready -h db -p 5432 -U ${DB_USERNAME:-banque_user}; do
-    echo "Database is unavailable - sleeping"
-    sleep 2
-  done
-  echo "✅ Database is ready!"
-fi
+# Wait for database to be ready
+echo "⏳ Waiting for database connection..."
+until pg_isready -h ${DB_HOST:-db} -p ${DB_PORT:-5432} -U ${DB_USERNAME:-banque_user}; do
+  echo "Database is unavailable - sleeping"
+  sleep 2
+done
+echo "✅ Database is ready!"
 
 # Run database migrations
 echo "📦 Running database migrations..."
