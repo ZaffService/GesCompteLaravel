@@ -2,24 +2,26 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Laravel\Sanctum\HasApiTokens;
+use Laravel\Passport\HasApiTokens;
 
-class Client extends Authenticatable
+
+class Client extends User
 {
     use HasApiTokens, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'id',
+        'name',
+        'email',
+        'password',
+        'role',
         'titulaire',
         'nci',
-        'email',
         'telephone',
         'adresse',
-        'password',
         'code',
     ];
 
@@ -65,5 +67,13 @@ class Client extends Authenticatable
         } while (self::where('code', $code)->exists());
 
         return $code;
+    }
+
+    /**
+     * Vérifier si l'utilisateur est un client
+     */
+    public function isClient(): bool
+    {
+        return $this->role === 'client';
     }
 }

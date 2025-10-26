@@ -46,11 +46,16 @@ class Compte extends Model
         parent::boot();
 
         static::creating(function ($compte) {
+            if (empty($compte->id)) {
+                $compte->id = (string) Str::uuid();
+            }
             if (empty($compte->numero_compte)) {
                 $compte->numero_compte = static::generateNumeroCompte();
             }
+            if (empty($compte->statut)) {
+                $compte->statut = 'actif';
+            }
             $compte->version = 1;
-            $compte->derniere_modification = now();
         });
 
         static::updating(function ($compte) {

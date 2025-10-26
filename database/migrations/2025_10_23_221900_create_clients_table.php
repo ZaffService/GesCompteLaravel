@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('adresse')->nullable();
             $table->string('password')->nullable();
             $table->string('code', 6)->nullable(); // Code à 6 caractères
+            $table->timestamp('code_verified_at')->nullable(); // Date de vérification du code
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->softDeletes(); // Soft delete activé

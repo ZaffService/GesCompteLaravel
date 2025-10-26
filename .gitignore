@@ -17,3 +17,9 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Documentation files
+*.md
+README.md
+endpoints.md
+Contraintes.md

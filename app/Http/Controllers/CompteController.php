@@ -5,27 +5,126 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Compte;
 use App\Http\Requests\StoreCompteRequest;
+use App\Http\Requests\IndexComptesRequest;
+use App\Http\Requests\UpdateCompteRequest;
+use App\Http\Requests\BloquerCompteRequest;
+use App\Http\Requests\DebloquerCompteRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * @OA\Info(
+ *     title="API Banque - Documentation",
+ *     version="1.0.0",
+ *     description="API RESTful pour la gestion des comptes bancaires"
+ * )
+ *
+ * @OA\Server(
+ *     url="http://127.0.0.1:8000",
+ *     description="Serveur local"
+ * ),
+ * @OA\Server(
+ *     url="http://api.moustapha.seck.com",
+ *     description="Serveur de production"
+ * )
+ *
+ * @OA\Schema(
+ *     schema="Compte",
+ *     type="object",
+ *     @OA\Property(property="id", type="string", example="550e8400-e29b-41d4-a716-446655440000"),
+ *     @OA\Property(property="numeroCompte", type="string", example="C00123456"),
+ *     @OA\Property(property="titulaire", type="string", example="Amadou Diallo"),
+ *     @OA\Property(property="type", type="string", enum={"epargne", "cheque"}),
+ *     @OA\Property(property="solde", type="number", example=1250000),
+ *     @OA\Property(property="devise", type="string", example="FCFA"),
+ *     @OA\Property(property="dateCreation", type="string", format="date-time"),
+ *     @OA\Property(property="statut", type="string", enum={"actif", "bloque", "ferme"}),
+ *     @OA\Property(property="motifBlocage", type="string", nullable=true),
+ *     @OA\Property(
+ *         property="metadata",
+ *         type="object",
+ *         @OA\Property(property="derniereModification", type="string", format="date-time"),
+ *         @OA\Property(property="version", type="integer", example=1)
+ *     )
+ * )
+ */
+
 class CompteController extends Controller
 {
     /**
-     * Lister tous les comptes avec filtres et pagination
+     * @OA\Get(
+     *     path="/api/v1/comptes",
+     *     tags={"Comptes"},
+     *     summary="Lister tous les comptes",
+     *     description="Admin peut récupérer la liste de tous les comptes, Client peut récupérer la liste de ses comptes",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Numéro de page",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Nombre d'éléments par page",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=10, maximum=100)
+     *     ),
+     *     @OA\Parameter(
+     *         name="type",
+     *         in="query",
+     *         description="Filtrer par type",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"epargne", "cheque"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="statut",
+     *         in="query",
+     *         description="Filtrer par statut",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"actif", "bloque", "ferme"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Recherche par titulaire ou numéro",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des comptes récupérée avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/Compte")
+     *             ),
+     *             @OA\Property(
+     *                 property="pagination",
+     *                 type="object",
+     *                 @OA\Property(property="currentPage", type="integer"),
+     *                 @OA\Property(property="totalPages", type="integer"),
+     *                 @OA\Property(property="totalItems", type="integer"),
+     *                 @OA\Property(property="itemsPerPage", type="integer"),
+     *                 @OA\Property(property="hasNext", type="boolean"),
+     *                 @OA\Property(property="hasPrevious", type="boolean")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non autorisé"
+     *     )
+     * )
      */
-    public function index(Request $request): JsonResponse
+    public function index(IndexComptesRequest $request): JsonResponse
     {
-        // Validation des paramètres
-        $request->validate([
-            'page' => 'nullable|integer|min:1',
-            'limit' => 'nullable|integer|min:1|max:100',
-            'type' => 'nullable|string|in:epargne,cheque',
-            'statut' => 'nullable|string|in:actif,bloque,ferme',
-            'search' => 'nullable|string|max:255',
-            'sort' => 'nullable|string|in:dateCreation,solde,titulaire',
-            'order' => 'nullable|string|in:asc,desc',
-        ]);
 
         // Clé de cache pour éviter les requêtes répétées
         $cacheKey = 'comptes_' . md5(serialize($request->all()));
@@ -72,7 +171,47 @@ class CompteController extends Controller
     }
 
     /**
-     * Afficher un compte spécifique
+     * @OA\Get(
+     *     path="/api/v1/comptes/{compteId}",
+     *     tags={"Comptes"},
+     *     summary="Récupérer un compte spécifique",
+     *     description="Admin peut récupérer un compte par ID, Client peut récupérer un de ses comptes par ID",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="compteId",
+     *         in="path",
+     *         required=true,
+     *         description="ID du compte",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Détails du compte récupérés avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", ref="#/components/schemas/Compte")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Compte non trouvé",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(
+     *                 property="error",
+     *                 type="object",
+     *                 @OA\Property(property="code", type="string", example="COMPTE_NOT_FOUND"),
+     *                 @OA\Property(property="message", type="string", example="Le compte avec l'ID spécifié n'existe pas")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès refusé"
+     *     )
+     * )
      */
     public function show(Compte $compte): JsonResponse
     {
@@ -102,7 +241,57 @@ class CompteController extends Controller
     }
 
     /**
-     * Créer un nouveau compte
+     * @OA\Post(
+     *     path="/api/v1/comptes",
+     *     tags={"Comptes"},
+     *     summary="Créer un nouveau compte",
+     *     description="Créer un nouveau compte bancaire avec génération automatique de numéro et client",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"type", "soldeInitial", "devise", "client"},
+     *             @OA\Property(property="type", type="string", enum={"cheque", "epargne"}),
+     *             @OA\Property(property="soldeInitial", type="number", minimum=10000),
+     *             @OA\Property(property="devise", type="string", example="FCFA"),
+     *             @OA\Property(
+     *                 property="client",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="string", nullable=true),
+     *                 @OA\Property(property="titulaire", type="string"),
+     *                 @OA\Property(property="nci", type="string", nullable=true),
+     *                 @OA\Property(property="email", type="string", format="email"),
+     *                 @OA\Property(property="telephone", type="string"),
+     *                 @OA\Property(property="adresse", type="string", nullable=true)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Compte créé avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Compte créé avec succès"),
+     *             @OA\Property(property="data", ref="#/components/schemas/Compte")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Données invalides",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(
+     *                 property="error",
+     *                 type="object",
+     *                 @OA\Property(property="code", type="string", example="VALIDATION_ERROR"),
+     *                 @OA\Property(property="message", type="string", example="Les données fournies sont invalides")
+     *             )
+     *         )
+     *     )
+     * )
      */
     public function store(StoreCompteRequest $request): JsonResponse
     {
@@ -140,17 +329,49 @@ class CompteController extends Controller
     }
 
     /**
-     * Mettre à jour un compte
+     * @OA\Patch(
+     *     path="/api/v1/comptes/{compteId}",
+     *     tags={"Comptes"},
+     *     summary="Mettre à jour les informations du client",
+     *     description="Mettre à jour les informations du client associé au compte",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="compteId",
+     *         in="path",
+     *         required=true,
+     *         description="ID du compte",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="titulaire", type="string", nullable=true),
+     *             @OA\Property(
+     *                 property="informationsClient",
+     *                 type="object",
+     *                 nullable=true,
+     *                 @OA\Property(property="telephone", type="string", nullable=true),
+     *                 @OA\Property(property="email", type="string", format="email", nullable=true),
+     *                 @OA\Property(property="password", type="string", nullable=true),
+     *                 @OA\Property(property="nci", type="string", nullable=true)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Informations mises à jour avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Compte mis à jour avec succès"),
+     *             @OA\Property(property="data", ref="#/components/schemas/Compte")
+     *         )
+     *     )
+     * )
      */
-    public function update(Request $request, Compte $compte): JsonResponse
+    public function update(UpdateCompteRequest $request, Compte $compte): JsonResponse
     {
-        // Validation basique (à étendre selon les besoins)
-        $request->validate([
-            'titulaire' => 'sometimes|string|max:255',
-            'informationsClient' => 'sometimes|array',
-            'informationsClient.telephone' => 'sometimes|string|regex:/^\+221(77|78|76|70|75|33|32)\d{7}$/',
-            'informationsClient.email' => 'sometimes|email|unique:clients,email,' . $compte->client_id,
-        ]);
 
         try {
             // Mise à jour du client si nécessaire
@@ -190,7 +411,37 @@ class CompteController extends Controller
     }
 
     /**
-     * Supprimer un compte (soft delete)
+     * @OA\Delete(
+     *     path="/api/v1/comptes/{compteId}",
+     *     tags={"Comptes"},
+     *     summary="Supprimer un compte",
+     *     description="Supprimer un compte (soft delete)",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="compteId",
+     *         in="path",
+     *         required=true,
+     *         description="ID du compte",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Compte supprimé avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Compte supprimé avec succès"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="string"),
+     *                 @OA\Property(property="numeroCompte", type="string"),
+     *                 @OA\Property(property="statut", type="string", example="ferme"),
+     *                 @OA\Property(property="dateFermeture", type="string", format="date-time")
+     *             )
+     *         )
+     *     )
+     * )
      */
     public function destroy(Compte $compte): JsonResponse
     {
@@ -224,15 +475,43 @@ class CompteController extends Controller
     }
 
     /**
-     * Bloquer un compte
+     * @OA\Post(
+     *     path="/api/v1/comptes/{compteId}/bloquer",
+     *     tags={"Comptes"},
+     *     summary="Bloquer un compte",
+     *     description="Bloquer un compte épargne actif",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="compteId",
+     *         in="path",
+     *         required=true,
+     *         description="ID du compte",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"motif", "duree", "unite"},
+     *             @OA\Property(property="motif", type="string", maxLength=500),
+     *             @OA\Property(property="duree", type="integer", minimum=1, maximum=365),
+     *             @OA\Property(property="unite", type="string", enum={"jours", "mois"})
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Compte bloqué avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Compte bloqué avec succès"),
+     *             @OA\Property(property="data", ref="#/components/schemas/Compte")
+     *         )
+     *     )
+     * )
      */
-    public function bloquer(Request $request, Compte $compte): JsonResponse
+    public function bloquer(BloquerCompteRequest $request, Compte $compte): JsonResponse
     {
-        $request->validate([
-            'motif' => 'required|string|max:500',
-            'duree' => 'required|integer|min:1|max:365',
-            'unite' => 'required|string|in:jours,mois'
-        ]);
 
         if (!$compte->peutEtreBloque()) {
             return response()->json([
@@ -268,13 +547,41 @@ class CompteController extends Controller
     }
 
     /**
-     * Débloquer un compte
+     * @OA\Post(
+     *     path="/api/v1/comptes/{compteId}/debloquer",
+     *     tags={"Comptes"},
+     *     summary="Débloquer un compte",
+     *     description="Débloquer un compte bloqué",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="compteId",
+     *         in="path",
+     *         required=true,
+     *         description="ID du compte",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"motif"},
+     *             @OA\Property(property="motif", type="string", maxLength=500)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Compte débloqué avec succès",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Compte débloqué avec succès"),
+     *             @OA\Property(property="data", ref="#/components/schemas/Compte")
+     *         )
+     *     )
+     * )
      */
-    public function debloquer(Request $request, Compte $compte): JsonResponse
+    public function debloquer(DebloquerCompteRequest $request, Compte $compte): JsonResponse
     {
-        $request->validate([
-            'motif' => 'required|string|max:500'
-        ]);
 
         if (!$compte->peutEtreDebloque()) {
             return response()->json([
