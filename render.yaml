@@ -18,7 +18,15 @@ services:
         fromSecret: APP_KEY
       - key: DB_CONNECTION
         value: pgsql
-      - key: DATABASE_URL
+      - key: DB_HOST
+        fromDatabase: api-banque-db
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        fromDatabase: api-banque-db
+      - key: DB_USERNAME
+        fromDatabase: api-banque-db
+      - key: DB_PASSWORD
         fromDatabase: api-banque-db
       - key: CACHE_DRIVER
         value: redis
