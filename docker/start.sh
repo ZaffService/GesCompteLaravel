@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 # Exit on error
@@ -42,6 +43,9 @@ if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:" ]; then
     echo "🔑 Generating application key..."
     php artisan key:generate --force
 fi
+
+echo "📚 Publishing Swagger assets..."
+php artisan vendor:publish --provider="L5Swagger\L5SwaggerServiceProvider" --force
 
 # Generate Swagger documentation
 echo "📚 Generating Swagger documentation..."
