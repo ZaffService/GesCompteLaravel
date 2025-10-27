@@ -35,12 +35,8 @@ Route::get('/', function () {
 | Configuration : voir config/l5-swagger.php
 */
 
-// Route personnalisée pour gérer /docs avec paramètre de requête
-Route::get('/docs', function (Illuminate\Http\Request $request) {
-    if ($request->has('api-docs.json')) {
-        return app(SwaggerDocsController::class)->getJson();
-    }
-    // Sinon, rediriger vers l'interface Swagger UI
+// Route pour l'interface Swagger UI
+Route::get('/docs', function () {
     return redirect('/api/documentation');
 })->name('l5-swagger.default.docs');
 
