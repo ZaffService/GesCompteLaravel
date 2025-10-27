@@ -20,5 +20,9 @@ Route::get('/', function () {
 
 Route::get('/docs/api-docs.json', [SwaggerDocsController::class, 'getJson'])->name('swagger.json');
 Route::get('/docs', function () {
+    $query = request()->getQueryString();
+    if ($query === 'api-docs.json') {
+        return app(SwaggerDocsController::class)->getJson();
+    }
     return redirect('/api/documentation');
 });
