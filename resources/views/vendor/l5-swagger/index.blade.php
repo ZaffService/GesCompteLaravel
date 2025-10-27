@@ -126,7 +126,7 @@
         // Build a system
         const ui = SwaggerUIBundle({
             dom_id: '#swagger-ui',
-            url: "{{ app()->environment('production') ? 'https://moustapha-seck.onrender.com/docs/api-docs.json' : url('docs/api-docs.json') }}",
+            url: "https://moustapha-seck.onrender.com/docs/api-docs.json",
             operationsSorter: {!! isset($operationsSorter) ? '"' . $operationsSorter . '"' : 'null' !!},
             configUrl: {!! isset($configUrl) ? '"' . $configUrl . '"' : 'null' !!},
             validatorUrl: {!! isset($validatorUrl) ? '"' . $validatorUrl . '"' : 'null' !!},
