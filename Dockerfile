@@ -48,11 +48,14 @@ RUN mkdir -p storage/api-docs && \
 # Copier le fichier .env pour la configuration
 COPY .env.production .env
 
-# Générer la documentation Swagger en tant que www-data
+# Générer les clés d'application et configurer
 USER www-data
-RUN php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan l5-swagger:generate
+RUN php artisan key:generate && \
+    php artisan config:cache && \
+    php artisan route:cache
+
+# Générer la documentation Swagger
+RUN php artisan l5-swagger:generate
 
 # Revenir à root pour la configuration système
 USER root
