@@ -23,9 +23,8 @@ return [
             'routes' => [
                 /*
                  * Route d'accès à l'interface Swagger UI
-                 * Changé de 'api/documentation' à 'docs' pour correspondre à vos besoins
                  */
-                'api' => 'docs',
+                'api' => 'api/documentation',
             ],
 
             'paths' => [
