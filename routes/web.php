@@ -50,14 +50,10 @@ Route::get('/docs/api-docs.json', [SwaggerDocsController::class, 'getJson'])->na
 // Route de debug - Affiche les informations de configuration Swagger
 // URL: /swagger/debug
 // Accessible uniquement en développement
-Route::get('/swagger/debug', [SwaggerDocsController::class, 'debug'])
-    ->name('swagger.debug')
-    ->middleware(function ($request, $next) {
-        if (app()->environment('production')) {
-            abort(403, 'Debug endpoint not available in production');
-        }
-        return $next($request);
-    });
+if (!app()->environment('production')) {
+    Route::get('/swagger/debug', [SwaggerDocsController::class, 'debug'])
+        ->name('swagger.debug');
+}
 
 // Route pour forcer la génération de la documentation
 // URL: /swagger/generate
