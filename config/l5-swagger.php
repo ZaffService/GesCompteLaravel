@@ -22,9 +22,10 @@ return [
 
             'routes' => [
                 /*
-                 * Route d’accès à l’interface Swagger UI
+                 * Route d'accès à l'interface Swagger UI
+                 * Changé de 'api/documentation' à 'docs' pour correspondre à vos besoins
                  */
-                'api' => 'api/documentation',
+                'api' => 'docs',
             ],
 
             'paths' => [
@@ -36,10 +37,11 @@ return [
                 /*
                  * Dossier contenant les assets Swagger UI (JS, CSS)
                  */
-                'swagger_ui_assets_path' => env('L5_SWAGGER_UI_ASSETS_PATH', 'docs/asset/'),
+                'swagger_ui_assets_path' => env('L5_SWAGGER_UI_ASSETS_PATH', 'vendor/swagger-api/'),
 
                 /*
                  * Nom du fichier JSON généré par L5 Swagger
+                 * Ceci créera l'URL : /docs/api-docs.json
                  */
                 'docs_json' => 'api-docs.json',
 
@@ -52,11 +54,6 @@ return [
                  * Format utilisé par défaut (json ou yaml)
                  */
                 'format_to_use_for_docs' => env('L5_FORMAT_TO_USE_FOR_DOCS', 'json'),
-
-                /*
-                 * URL pour accéder à la documentation générée
-                 */
-                'docs_url' => env('L5_SWAGGER_DOCS_URL', '/docs'),
 
                 /*
                  * Dossier contenant les annotations Swagger
@@ -81,14 +78,29 @@ return [
         |--------------------------------------------------------------------------
         */
         'routes' => [
+            /*
+             * Route pour l'interface Swagger UI
+             */
             'docs' => 'docs',
+            
+            /*
+             * Route pour le callback OAuth2
+             */
             'oauth2_callback' => 'api/oauth2-callback',
+            
+            /*
+             * Middleware à appliquer sur les routes
+             */
             'middleware' => [
                 'api' => [],
                 'asset' => [],
                 'docs' => [],
                 'oauth2_callback' => [],
             ],
+            
+            /*
+             * Options de groupe de routes
+             */
             'group_options' => [],
         ],
 
@@ -98,9 +110,24 @@ return [
         |--------------------------------------------------------------------------
         */
         'paths' => [
+            /*
+             * Dossier où le fichier api-docs.json sera stocké
+             */
             'docs' => storage_path('api-docs'),
+            
+            /*
+             * Dossier contenant les vues Blade de Swagger UI
+             */
             'views' => base_path('resources/views/vendor/l5-swagger'),
+            
+            /*
+             * URL de base pour l'API
+             */
             'base' => env('L5_SWAGGER_BASE_PATH', 'https://moustapha-seck.onrender.com'),
+            
+            /*
+             * Dossiers à exclure du scan
+             */
             'excludes' => [],
         ],
 
@@ -124,7 +151,7 @@ return [
 
         /*
         |--------------------------------------------------------------------------
-        | Sécurité de l’API (JWT / Bearer)
+        | Sécurité de l'API (JWT / Bearer)
         |--------------------------------------------------------------------------
         */
         'securityDefinitions' => [
@@ -136,7 +163,11 @@ return [
                     'description' => 'Entrez votre token JWT obtenu via POST /api/v1/auth/login',
                 ],
             ],
-            'security' => [],
+            'security' => [
+                [
+                    'bearerAuth' => [],
+                ],
+            ],
         ],
 
         /*
@@ -144,11 +175,36 @@ return [
         | Génération et options globales
         |--------------------------------------------------------------------------
         */
-        'generate_always' => env('L5_SWAGGER_GENERATE_ALWAYS', true),
+        
+        /*
+         * Générer la documentation à chaque requête (true) 
+         * ou seulement avec la commande artisan (false)
+         */
+        'generate_always' => env('L5_SWAGGER_GENERATE_ALWAYS', false),
+        
+        /*
+         * Générer également une copie YAML
+         */
         'generate_yaml_copy' => env('L5_SWAGGER_GENERATE_YAML_COPY', false),
-        'proxy' => true,
+        
+        /*
+         * Utiliser le proxy configuré
+         */
+        'proxy' => false,
+        
+        /*
+         * URL de configuration supplémentaire
+         */
         'additional_config_url' => null,
+        
+        /*
+         * Tri des opérations (null, 'alpha', 'method')
+         */
         'operations_sort' => env('L5_SWAGGER_OPERATIONS_SORT', null),
+        
+        /*
+         * URL du validateur Swagger (null pour désactiver)
+         */
         'validator_url' => null,
 
         /*
@@ -158,20 +214,31 @@ return [
         */
         'ui' => [
             'display' => [
-                'dark_mode' => env('L5_SWAGGER_UI_DARK_MODE', false),
-                'doc_expansion' => env('L5_SWAGGER_UI_DOC_EXPANSION', 'none'),
-                'filter' => env('L5_SWAGGER_UI_FILTERS', true),
-
                 /*
-                 * ✅ Correction principale :
-                 * Forcer Swagger UI à pointer vers /docs/api-docs.json
-                 * au lieu de générer /docs?api-docs.json
+                 * Mode sombre
                  */
-                'url' => env('L5_SWAGGER_UI_DOCS_URL', '/docs/api-docs.json'),
+                'dark_mode' => env('L5_SWAGGER_UI_DARK_MODE', false),
+                
+                /*
+                 * Expansion de la documentation (none, list, full)
+                 */
+                'doc_expansion' => env('L5_SWAGGER_UI_DOC_EXPANSION', 'none'),
+                
+                /*
+                 * Afficher le filtre de recherche
+                 */
+                'filter' => env('L5_SWAGGER_UI_FILTERS', true),
             ],
 
             'authorization' => [
+                /*
+                 * Persister l'autorisation entre les rechargements
+                 */
                 'persist_authorization' => env('L5_SWAGGER_UI_PERSIST_AUTHORIZATION', true),
+                
+                /*
+                 * Configuration OAuth2
+                 */
                 'oauth2' => [
                     'use_pkce_with_authorization_code_grant' => false,
                 ],

@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SwaggerDocsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,4 +17,40 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/docs/api-docs.json', [SwaggerDocsController::class, 'getJson'])->name('swagger.json');
+/*
+|--------------------------------------------------------------------------
+| Routes Swagger / L5-Swagger
+|--------------------------------------------------------------------------
+|
+| Les routes suivantes sont AUTOMATIQUEMENT générées par L5-Swagger :
+|
+| GET  /docs                  -> Interface Swagger UI
+| GET  /docs/api-docs.json    -> Fichier JSON OpenAPI
+| GET  /docs/asset/*          -> Assets Swagger UI (CSS, JS, etc.)
+|
+| ⚠️ NE PAS définir manuellement ces routes ici !
+| Elles sont gérées par le package L5-Swagger via le service provider.
+|
+| Configuration : voir config/l5-swagger.php
+*/
+
+// ❌ CETTE LIGNE A ÉTÉ SUPPRIMÉE (générée automatiquement par L5-Swagger)
+// Route::get('/docs/api-docs.json', [SwaggerDocsController::class, 'getJson'])->name('swagger.json');
+
+/*
+|--------------------------------------------------------------------------
+| Routes personnalisées (si nécessaire)
+|--------------------------------------------------------------------------
+|
+| Si vous avez besoin de routes personnalisées pour votre application,
+| ajoutez-les ici.
+*/
+
+// Exemple : Route pour une page d'accueil API
+// Route::get('/api', function () {
+//     return response()->json([
+//         'message' => 'Bienvenue sur l\'API Banque',
+//         'documentation' => url('/docs'),
+//         'version' => '1.0.0'
+//     ]);
+// });
