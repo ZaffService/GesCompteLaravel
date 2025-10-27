@@ -16,6 +16,10 @@ fi
 # Lancer les migrations si la BDD est dispo
 php artisan migrate --force || true
 
+# Générer la documentation Swagger AVANT les caches
+echo "📚 Génération de la documentation Swagger..."
+php artisan l5-swagger:generate --no-interaction || true
+
 # Générer les caches pour accélérer l'app
 php artisan config:cache || true
 php artisan route:cache || true
