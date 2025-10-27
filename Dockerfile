@@ -1,7 +1,7 @@
-# Utiliser l'image PHP officielle avec FPM
+#  Utiliser l'image officielle PHP avec FPM
 FROM php:8.3-fpm
 
-# Installer les dépendances système
+# 🔧 Installer les dépendances système
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -18,70 +18,65 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip pdo_pgsql
 
-# Installer Composer
+# 🎵 Installer Composer depuis l’image officielle
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Créer l'utilisateur www-data avec le bon UID/GID
+# 👤 Configurer l’utilisateur www-data
 RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
 
-# Définir le répertoire de travail
+# 📂 Définir le répertoire de travail
 WORKDIR /var/www/html
 
-# Copier les fichiers de l'application
-COPY . /var/www/html
+# 📦 Copier les fichiers du projet
+COPY . .
 
-# Changer les permissions avant l'installation des dépendances
+# 🔒 Ajuster les permissions avant installation
 RUN chown -R www-data:www-data /var/www/html
 
-# Installer les dépendances PHP en tant que www-data
+# 👨‍💻 Passer à l’utilisateur www-data
 USER www-data
+
+# ⚙️ Installer les dépendances PHP sans scripts (évite erreurs Laravel)
 RUN composer install --optimize-autoloader --no-dev --no-interaction --no-scripts
 
-# Copier le fichier .env APRÈS l'installation des dépendances
-COPY .env.production .env
+# 🧾 Copier le .env de production
+COPY --chown=www-data:www-data .env.production .env
 
-# Créer les répertoires nécessaires pour Swagger
-RUN mkdir -p storage/api-docs
+# 🗂️ Créer les répertoires nécessaires (Swagger, cache, storage)
+RUN mkdir -p storage/api-docs bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache
 
-# Configuration de base AVANT tout artisan
-RUN sed -i 's/^APP_KEY=.*/APP_KEY=/' .env && \
-    php artisan key:generate --force --no-interaction
+# 🧼 Nettoyer toute trace de cache avant génération de clé
+RUN php artisan optimize:clear || true
 
-# Générer la documentation Swagger SANS cache
-RUN php artisan l5-swagger:generate --no-interaction
+# 🔑 Générer la clé Laravel proprement
+RUN echo "APP_KEY=base64:$(openssl rand -base64 32)" > .env.tmp && \
+    cat .env >> .env.tmp && \
+    mv .env.tmp .env
 
-# MAINTENANT faire le cache (après Swagger)
-RUN php artisan config:cache --no-interaction && \
-    php artisan route:cache --no-interaction && \
-    php artisan view:cache --no-interaction
+# 🧰 Ne PAS exécuter les commandes artisan lourdes ici
+# Elles seront faites au démarrage via start.sh
 
-# Revenir à root pour la configuration système
+# 👑 Revenir à root pour les configurations système
 USER root
 
-# Créer les répertoires nécessaires et configurer les permissions
-RUN chown -R www-data:www-data storage && \
-    chmod -R 775 storage && \
-    chmod -R 775 bootstrap/cache
-
-# Créer les répertoires système nécessaires
+# 🧱 Préparer les dossiers système
 RUN mkdir -p /var/log/supervisor /var/run /var/log/nginx /var/cache/nginx
 
-# Copier la configuration Nginx
+# 🧩 Copier les configurations
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/default.conf /etc/nginx/sites-available/default
-
-# Copier la configuration Supervisor
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Copier le script de démarrage
+# 🚀 Copier le script de démarrage
 COPY docker/start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
-# Définir les permissions finales
+# 🔐 Permissions finales
 RUN chown -R www-data:www-data /var/www/html
 
-# Exposer le port 80
+# 🌐 Exposer le port 80
 EXPOSE 80
 
-# Script de démarrage
+# 🏁 Commande de démarrage
 CMD ["/usr/local/bin/start.sh"]
