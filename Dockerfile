@@ -50,12 +50,14 @@ COPY .env.production .env
 
 # Générer les clés d'application et configurer
 USER www-data
-RUN php artisan key:generate && \
-    php artisan config:cache && \
-    php artisan route:cache
+RUN php artisan key:generate
 
-# Générer la documentation Swagger
+# Générer la documentation Swagger AVANT le cache
 RUN php artisan l5-swagger:generate
+
+# Maintenant faire le cache
+RUN php artisan config:cache && \
+    php artisan route:cache
 
 # Revenir à root pour la configuration système
 USER root
