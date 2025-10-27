@@ -333,4 +333,28 @@ Route::prefix('v1')->group(function () {
          */
         Route::post('/comptes/{compte}/debloquer', [App\Http\Controllers\CompteController::class, 'debloquer']);
     });
+// Swagger routes
+Route::get('/documentation', function () {
+    return view('l5-swagger::index');
+})->name('l5-swagger.default.api');
+
+Route::get('/docs', function () {
+    $fileSystem = new \Illuminate\Filesystem\Filesystem();
+    $filePath = storage_path('api-docs/api-docs.json');
+
+    if (!$fileSystem->exists($filePath)) {
+        abort(404, 'Documentation file not found');
+    }
+
+    $content = $fileSystem->get($filePath);
+    return response($content, 200, ['Content-Type' => 'application/json']);
+})->name('l5-swagger.default.docs');
+
+Route::get('/docs/asset/{asset}', function ($asset) {
+    $path = public_path('docs/asset/' . $asset);
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    return response()->file($path);
+})->name('l5-swagger.default.asset');
 });
