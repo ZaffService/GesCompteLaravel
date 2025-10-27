@@ -42,7 +42,7 @@ Route::get('/docs', function (Illuminate\Http\Request $request) {
     }
     // Sinon, rediriger vers l'interface Swagger UI
     return redirect('/api/documentation');
-});
+})->name('l5-swagger.default.docs');
 
 /*
 |--------------------------------------------------------------------------
