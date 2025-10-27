@@ -126,7 +126,8 @@
         // Build a system
         const ui = SwaggerUIBundle({
             dom_id: '#swagger-ui',
-            url: "{{ config('l5-swagger.defaults.paths.base') }}/docs/?api-docs.json",
+            // FIX: Utiliser l'URL absolue pour la production
+            url: "{{ url('/docs/api-docs.json') }}",
             operationsSorter: {!! isset($operationsSorter) ? '"' . $operationsSorter . '"' : 'null' !!},
             configUrl: {!! isset($configUrl) ? '"' . $configUrl . '"' : 'null' !!},
             validatorUrl: {!! isset($validatorUrl) ? '"' . $validatorUrl . '"' : 'null' !!},
