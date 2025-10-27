@@ -44,7 +44,8 @@ COPY .env.production .env
 RUN mkdir -p storage/api-docs
 
 # Configuration de base AVANT tout artisan
-RUN php artisan key:generate --force --no-interaction
+RUN echo "APP_KEY=" > .env && \
+    php artisan key:generate --force --no-interaction
 
 # Générer la documentation Swagger SANS cache
 RUN php artisan l5-swagger:generate --no-interaction
