@@ -30,6 +30,9 @@ WORKDIR /var/www/html
 # Copier les fichiers de l'application
 COPY . /var/www/html
 
+# Copier le fichier .env AVANT tout
+COPY .env.production .env
+
 # Changer les permissions avant l'installation des dépendances
 RUN chown -R www-data:www-data /var/www/html
 
@@ -37,32 +40,29 @@ RUN chown -R www-data:www-data /var/www/html
 USER www-data
 RUN composer install --optimize-autoloader --no-dev --no-interaction --no-scripts
 
+# Créer les répertoires nécessaires pour Swagger
+RUN mkdir -p storage/api-docs
+
+# Générer les clés d'application
+RUN php artisan key:generate
+
+# Générer la documentation Swagger SANS cache
+RUN php artisan l5-swagger:generate
+
+# MAINTENANT faire le cache (après Swagger)
+RUN php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
+
 # Revenir à root pour la configuration système
 USER root
 
 # Créer les répertoires nécessaires et configurer les permissions
-RUN mkdir -p storage/api-docs && \
-    chown -R www-data:www-data storage && \
-    chmod -R 775 storage
+RUN chown -R www-data:www-data storage && \
+    chmod -R 775 storage && \
+    chmod -R 775 bootstrap/cache
 
-# Copier le fichier .env pour la configuration
-COPY .env.production .env
-
-# Générer les clés d'application et configurer
-USER www-data
-RUN php artisan key:generate
-
-# Générer la documentation Swagger AVANT le cache
-RUN php artisan l5-swagger:generate
-
-# Maintenant faire le cache
-RUN php artisan config:cache && \
-    php artisan route:cache
-
-# Revenir à root pour la configuration système
-USER root
-
-# Créer les répertoires nécessaires
+# Créer les répertoires système nécessaires
 RUN mkdir -p /var/log/supervisor /var/run /var/log/nginx /var/cache/nginx
 
 # Copier la configuration Nginx
@@ -77,9 +77,7 @@ COPY docker/start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
 # Définir les permissions finales
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html
 
 # Exposer le port 80
 EXPOSE 80
