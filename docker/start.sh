@@ -1,76 +1,27 @@
 
 #!/bin/bash
-
-# Exit on error
 set -e
 
-echo "🚀 Starting API Banque Laravel Application..."
+echo "🚀 Lancement du conteneur Laravel..."
 
-# Wait for database to be ready (only in development)
-if [ "$APP_ENV" != "production" ]; then
-  echo "⏳ Waiting for database connection..."
-  until pg_isready -h ${DB_HOST:-db} -p ${DB_PORT:-5432} -U ${DB_USERNAME:-banque_user}; do
-    echo "${DB_HOST:-db}:${DB_PORT:-5432} - no response"
-    echo "Database is unavailable - sleeping"
-    sleep 2
-  done
-  echo "✅ Database is ready!"
-else
-  echo "⏳ Production environment detected - skipping database connection check"
-  echo "✅ Assuming database is ready (managed by Render)"
+# Réinitialiser tous les caches avant le démarrage
+php artisan optimize:clear || true
+
+# Vérifier la clé APP_KEY (si manquante, la régénérer)
+if grep -q "^APP_KEY=$" .env; then
+    echo "⚙️ Génération d'une nouvelle clé Laravel..."
+    php artisan key:generate --force --no-interaction || true
 fi
 
-# Run database migrations
-echo "📦 Running database migrations..."
-php artisan migrate --force
+# Lancer les migrations si la BDD est dispo
+php artisan migrate --force || true
 
-# Run database seeders (only in development)
-if [ "$APP_ENV" != "production" ]; then
-  echo "🌱 Running database seeders..."
-  php artisan db:seed --force
-else
-  echo "⏭️ Skipping database seeders in production environment"
-fi
+# Générer les caches pour accélérer l'app
+php artisan config:cache || true
+php artisan route:cache || true
+php artisan view:cache || true
 
-# Install Passport keys if not exists
-if [ ! -f storage/oauth-public.key ]; then
-    echo "🔐 Installing Passport keys..."
-    php artisan passport:install --force
-fi
+echo "✅ Configuration Laravel terminée ! Démarrage des services..."
 
-# Generate application key if not set
-if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:" ]; then
-    echo "🔑 Generating application key..."
-    php artisan key:generate --force
-fi
-
-echo "📚 Publishing Swagger assets..."
-php artisan vendor:publish --provider="L5Swagger\L5SwaggerServiceProvider" --force
-
-# Generate Swagger documentation
-echo "📚 Generating Swagger documentation..."
-php artisan l5-swagger:generate --no-interaction || true
-
-# Clear caches before optimization
-echo "🧹 Clearing caches..."
-php artisan config:clear
-php artisan cache:clear
-php artisan view:clear
-
-# Clear and cache config
-echo "⚡ Optimizing application..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# Set proper permissions
-echo "🔒 Setting permissions..."
-chown -R www-data:www-data /var/www/html/storage
-chown -R www-data:www-data /var/www/html/bootstrap/cache
-chmod -R 755 /var/www/html/storage
-chmod -R 755 /var/www/html/bootstrap/cache
-
-echo "🎉 Application is ready! Starting services..."
-
-# Start supervisord
-exec supervisord -c /etc/supervisor/conf.d/supervisord.conf
+# Lancer Nginx + PHP-FPM + Queue Worker
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
