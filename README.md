@@ -54,6 +54,64 @@ Une API REST complète pour la gestion bancaire développée avec Laravel, Postg
    - Une fois déployé, accédez à : `https://votre-service.onrender.com`
    - La documentation Swagger sera disponible à : `https://votre-service.onrender.com/api/documentation`
 
+## 🔍 Liens de test après déploiement
+
+### URLs à tester :
+
+1. **Interface Swagger UI** :
+   ```
+   https://moustapha-seck.onrender.com/docs
+   ```
+   - Devrait afficher l'interface Swagger avec tous les endpoints
+
+2. **Documentation JSON (via query parameter)** :
+   ```
+   https://moustapha-seck.onrender.com/docs/?api-docs.json
+   ```
+   - Devrait retourner le fichier JSON OpenAPI directement
+
+3. **Documentation JSON (via route directe)** :
+   ```
+   https://moustapha-seck.onrender.com/docs/api-docs.json
+   ```
+   - Alternative pour accéder au JSON
+
+4. **Page d'accueil** :
+   ```
+   https://moustapha-seck.onrender.com/
+   ```
+   - Page de bienvenue Laravel
+
+### Tests fonctionnels :
+
+5. **Authentification (Admin)** :
+   ```bash
+   curl -X POST https://moustapha-seck.onrender.com/api/v1/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"email":"admin@banque.com","password":"admin123"}'
+   ```
+
+6. **Authentification (Client)** :
+   ```bash
+   curl -X POST https://moustapha-seck.onrender.com/api/v1/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"email":"client@example.com","password":"client123","code":"123456"}'
+   ```
+
+7. **Lister les comptes (avec token)** :
+   ```bash
+   curl -X GET https://moustapha-seck.onrender.com/api/v1/comptes \
+     -H "Authorization: Bearer YOUR_JWT_TOKEN"
+   ```
+
+### Vérifications importantes :
+
+- ✅ L'interface Swagger UI se charge correctement
+- ✅ Le champ "Explore" dans Swagger affiche : `https://moustapha-seck.onrender.com/docs/?api-docs.json`
+- ✅ Cette URL retourne bien du JSON valide
+- ✅ Les endpoints d'authentification fonctionnent
+- ✅ Les endpoints protégés nécessitent un token valide
+
 ## 🔧 Configuration locale (Docker)
 
 ### Prérequis
