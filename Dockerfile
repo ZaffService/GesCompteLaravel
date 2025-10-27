@@ -43,8 +43,8 @@ COPY .env.production .env
 # Créer les répertoires nécessaires pour Swagger
 RUN mkdir -p storage/api-docs
 
-# Générer les clés d'application
-RUN php artisan key:generate
+# Configuration de base AVANT tout artisan
+RUN php artisan key:generate --force
 
 # Générer la documentation Swagger SANS cache
 RUN php artisan l5-swagger:generate
