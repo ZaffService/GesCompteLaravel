@@ -123,14 +123,17 @@
 <script src="{{ l5_swagger_asset($documentation, 'swagger-ui-standalone-preset.js') }}"></script>
 <script>
     window.onload = function() {
+        // Construction de l'URL absolue pour éviter la transformation par Swagger UI
+        var apiUrl = "{{ config('l5-swagger.defaults.paths.base') }}/docs/api-docs.json";
+        
         // Build a system
         const ui = SwaggerUIBundle({
             dom_id: '#swagger-ui',
-            url: "https://moustapha-seck.onrender.com/docs/api-docs.json",
+            url: apiUrl,
             operationsSorter: {!! isset($operationsSorter) ? '"' . $operationsSorter . '"' : 'null' !!},
             configUrl: {!! isset($configUrl) ? '"' . $configUrl . '"' : 'null' !!},
             validatorUrl: {!! isset($validatorUrl) ? '"' . $validatorUrl . '"' : 'null' !!},
-            oauth2RedirectUrl: "{{ url('api/oauth2-callback') }}",
+            oauth2RedirectUrl: "{{ config('l5-swagger.defaults.paths.base') }}/api/oauth2-callback",
 
             requestInterceptor: function(request) {
                 request.headers['X-CSRF-TOKEN'] = '{{ csrf_token() }}';
