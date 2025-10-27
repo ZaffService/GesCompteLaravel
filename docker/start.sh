@@ -20,9 +20,9 @@ php artisan migrate --force || true
 echo "📚 Génération de la documentation Swagger..."
 php artisan l5-swagger:generate --no-interaction || true
 
-# Générer les caches pour accélérer l'app
+# Générer les caches pour accélérer l'app (SAUF les routes pour éviter les problèmes avec les Closures)
 php artisan config:cache || true
-php artisan route:cache || true
+# php artisan route:cache || true  # Désactivé temporairement à cause des routes Closure
 php artisan view:cache || true
 
 echo "✅ Configuration Laravel terminée ! Démarrage des services..."

@@ -153,6 +153,16 @@ class SwaggerDocsController extends Controller
     }
 
     /**
+     * Rediriger vers l'interface Swagger UI
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function redirectToSwagger()
+    {
+        return redirect('/api/documentation');
+    }
+
+    /**
      * Retourner le fichier JSON avec les bons headers
      *
      * @param string $path

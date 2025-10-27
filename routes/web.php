@@ -36,9 +36,7 @@ Route::get('/', function () {
 */
 
 // Route pour l'interface Swagger UI
-Route::get('/docs', function () {
-    return redirect('/api/documentation');
-})->name('l5-swagger.default.docs');
+Route::get('/docs', [SwaggerDocsController::class, 'redirectToSwagger'])->name('l5-swagger.default.docs');
 
 // Route pour le fichier JSON directement
 Route::get('/docs/api-docs.json', [SwaggerDocsController::class, 'getJson'])->name('l5-swagger.default.docs_json');
