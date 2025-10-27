@@ -30,15 +30,15 @@ WORKDIR /var/www/html
 # Copier les fichiers de l'application
 COPY . /var/www/html
 
-# Copier le fichier .env AVANT tout
-COPY .env.production .env
-
 # Changer les permissions avant l'installation des dépendances
 RUN chown -R www-data:www-data /var/www/html
 
 # Installer les dépendances PHP en tant que www-data
 USER www-data
 RUN composer install --optimize-autoloader --no-dev --no-interaction --no-scripts
+
+# Copier le fichier .env APRÈS l'installation des dépendances
+COPY .env.production .env
 
 # Créer les répertoires nécessaires pour Swagger
 RUN mkdir -p storage/api-docs
