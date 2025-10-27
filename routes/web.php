@@ -44,6 +44,9 @@ Route::get('/docs', function (Illuminate\Http\Request $request) {
     return redirect('/api/documentation');
 })->name('l5-swagger.default.docs');
 
+// Route pour le fichier JSON directement
+Route::get('/docs/api-docs.json', [SwaggerDocsController::class, 'getJson'])->name('l5-swagger.default.docs_json');
+
 /*
 |--------------------------------------------------------------------------
 | Routes personnalisées (si nécessaire)
