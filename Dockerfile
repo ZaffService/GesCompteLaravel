@@ -45,6 +45,9 @@ RUN mkdir -p storage/api-docs && \
     chown -R www-data:www-data storage && \
     chmod -R 775 storage
 
+# Copier le fichier .env pour la configuration
+COPY .env.production .env
+
 # Générer la documentation Swagger en tant que www-data
 USER www-data
 RUN php artisan config:cache && \
