@@ -25,4 +25,4 @@ Route::get('/docs', function () {
         return app(SwaggerDocsController::class)->getJson();
     }
     return redirect('/api/documentation');
-});
+})->name('docs');
