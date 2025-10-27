@@ -124,7 +124,7 @@
 <script>
     window.onload = function() {
         // Construction de l'URL absolue pour éviter la transformation par Swagger UI
-        var apiUrl = "{{ config('l5-swagger.defaults.paths.base') }}/docs/api-docs.json";
+        var apiUrl = new URL('/docs/api-docs.json', window.location.origin).href;
         
         // Build a system
         const ui = SwaggerUIBundle({
