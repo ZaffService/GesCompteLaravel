@@ -37,6 +37,9 @@ RUN chown -R www-data:www-data /var/www/html
 USER www-data
 RUN composer install --optimize-autoloader --no-dev --no-interaction
 
+# Générer la documentation Swagger
+RUN php artisan l5-swagger:generate
+
 # Revenir à root pour la configuration système
 USER root
 
