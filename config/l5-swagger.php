@@ -36,7 +36,7 @@ return [
                 /*
                  * Dossier contenant les assets Swagger UI (JS, CSS)
                  */
-                'swagger_ui_assets_path' => env('L5_SWAGGER_UI_ASSETS_PATH', 'vendor/swagger-api/'),
+                'swagger_ui_assets_path' => env('L5_SWAGGER_UI_ASSETS_PATH', 'docs/asset/'),
 
                 /*
                  * Nom du fichier JSON généré par L5 Swagger
