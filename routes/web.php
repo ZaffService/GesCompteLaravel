@@ -20,15 +20,13 @@ Route::get('/', function () {
 
 Route::get('/docs/api-docs.json', [SwaggerDocsController::class, 'getJson'])->name('swagger.json');
 
-// Route pour gérer /docs avec ou sans paramètres de requête
-Route::get('/docs{any?}', function ($any = null) {
+// Route spécifique pour /docs?api-docs.json
+Route::get('/docs', function () {
     $query = request()->getQueryString();
 
-    // Si c'est une requête pour api-docs.json
-    if ($query === 'api-docs.json' || $any === '?api-docs.json') {
+    if ($query === 'api-docs.json') {
         return app(SwaggerDocsController::class)->getJson();
     }
 
-    // Sinon, rediriger vers l'interface Swagger
     return redirect('/api/documentation');
-})->where('any', '.*')->name('docs');
+})->name('docs');
