@@ -1,7 +1,7 @@
-# Documentation API - Fichiers de Gestion
+# Documentation Swagger API - Fichiers de Gestion
 
 ## Vue d'ensemble
-Voici tous les fichiers qui gèrent la documentation de l'API dans le projet Laravel, avec leurs rôles respectifs et extraits de code pertinents.
+Voici tous les fichiers qui gèrent la documentation Swagger/OpenAPI de l'API dans le projet Laravel, avec leurs rôles respectifs et extraits de code pertinents.
 
 ## 1. Configuration principale - `config/l5-swagger.php`
 
