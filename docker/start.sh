@@ -49,7 +49,7 @@ php artisan vendor:publish --provider="L5Swagger\L5SwaggerServiceProvider" --for
 
 # Generate Swagger documentation
 echo "📚 Generating Swagger documentation..."
-php artisan l5-swagger:generate
+php artisan l5-swagger:generate --no-interaction || true
 
 # Clear caches before optimization
 echo "🧹 Clearing caches..."
