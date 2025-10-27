@@ -45,18 +45,58 @@ Route::get('/docs/api-docs.json', [SwaggerDocsController::class, 'getJson'])->na
 
 /*
 |--------------------------------------------------------------------------
-| Routes personnalisées (si nécessaire)
+| Routes de Debug et Maintenance Swagger (Non-production uniquement)
 |--------------------------------------------------------------------------
-|
-| Si vous avez besoin de routes personnalisées pour votre application,
-| ajoutez-les ici.
 */
 
-// Exemple : Route pour une page d'accueil API
-// Route::get('/api', function () {
-//     return response()->json([
-//         'message' => 'Bienvenue sur l\'API Banque',
-//         'documentation' => url('/docs'),
-//         'version' => '1.0.0'
-//     ]);
-// });
+// Route de debug - Affiche les informations de configuration Swagger
+// URL: /swagger/debug
+// Accessible uniquement en développement
+Route::get('/swagger/debug', [SwaggerDocsController::class, 'debug'])
+    ->name('swagger.debug')
+    ->middleware(function ($request, $next) {
+        if (app()->environment('production')) {
+            abort(403, 'Debug endpoint not available in production');
+        }
+        return $next($request);
+    });
+
+// Route pour forcer la génération de la documentation
+// URL: /swagger/generate
+// Utile après le déploiement ou en cas de problème
+Route::get('/swagger/generate', [SwaggerDocsController::class, 'generate'])
+    ->name('swagger.generate');
+
+// Route de vérification rapide (health check)
+Route::get('/swagger/health', function () {
+    $path = storage_path('api-docs/api-docs.json');
+    $exists = file_exists($path);
+
+    return response()->json([
+        'status' => $exists ? 'ok' : 'error',
+        'swagger_json_exists' => $exists,
+        'swagger_ui_url' => url('/api/documentation'),
+        'json_url' => url('/docs/api-docs.json'),
+        'timestamp' => now()->toIso8601String(),
+    ], $exists ? 200 : 503);
+})->name('swagger.health');
+
+/*
+|--------------------------------------------------------------------------
+| Routes personnalisées de l'application
+|--------------------------------------------------------------------------
+*/
+
+// Exemple : Page d'accueil de l'API
+Route::get('/api', function () {
+    return response()->json([
+        'name' => 'API Banque',
+        'version' => '1.0.0',
+        'description' => 'API RESTful pour la gestion des comptes bancaires',
+        'documentation' => url('/api/documentation'),
+        'openapi_json' => url('/docs/api-docs.json'),
+        'environment' => app()->environment(),
+        'timestamp' => now()->toIso8601String(),
+    ]);
+})->name('api.index');
+
