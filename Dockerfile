@@ -47,7 +47,9 @@ RUN mkdir -p storage/api-docs && \
 
 # Générer la documentation Swagger en tant que www-data
 USER www-data
-RUN php artisan l5-swagger:generate
+RUN php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan l5-swagger:generate
 
 # Revenir à root pour la configuration système
 USER root
