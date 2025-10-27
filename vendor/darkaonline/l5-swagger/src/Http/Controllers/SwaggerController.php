@@ -173,7 +173,7 @@ class SwaggerController extends BaseController
             $useAbsolutePath
         );
 
-        // Fix URL format to ensure /api-docs.json instead of ?api-docs.json
-        return str_replace('?api-docs.json', '/api-docs.json', $url);
+        // Fix URL format to ensure /?api-docs.json instead of /api-docs.json
+        return str_replace('/api-docs.json', '/?api-docs.json', $url);
     }
 }
