@@ -44,15 +44,15 @@ COPY .env.production .env
 RUN mkdir -p storage/api-docs
 
 # Configuration de base AVANT tout artisan
-RUN php artisan key:generate --force
+RUN php artisan key:generate --force --no-interaction
 
 # Générer la documentation Swagger SANS cache
-RUN php artisan l5-swagger:generate
+RUN php artisan l5-swagger:generate --no-interaction
 
 # MAINTENANT faire le cache (après Swagger)
-RUN php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
+RUN php artisan config:cache --no-interaction && \
+    php artisan route:cache --no-interaction && \
+    php artisan view:cache --no-interaction
 
 # Revenir à root pour la configuration système
 USER root
