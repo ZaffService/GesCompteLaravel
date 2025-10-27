@@ -26,3 +26,12 @@ Route::get('/docs', function () {
     }
     return redirect('/api/documentation');
 })->name('docs');
+
+// Route spécifique pour /docs?api-docs.json
+Route::get('/docs/', function () {
+    $query = request()->getQueryString();
+    if ($query === 'api-docs.json') {
+        return app(SwaggerDocsController::class)->getJson();
+    }
+    return redirect('/api/documentation');
+});
