@@ -35,9 +35,18 @@ RUN chown -R www-data:www-data /var/www/html
 
 # Installer les dépendances PHP en tant que www-data
 USER www-data
-RUN composer install --optimize-autoloader --no-dev --no-interaction
+RUN composer install --optimize-autoloader --no-dev --no-interaction --no-scripts
 
-# Générer la documentation Swagger
+# Revenir à root pour la configuration système
+USER root
+
+# Créer les répertoires nécessaires et configurer les permissions
+RUN mkdir -p storage/api-docs && \
+    chown -R www-data:www-data storage && \
+    chmod -R 775 storage
+
+# Générer la documentation Swagger en tant que www-data
+USER www-data
 RUN php artisan l5-swagger:generate
 
 # Revenir à root pour la configuration système
