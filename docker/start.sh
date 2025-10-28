@@ -19,6 +19,23 @@ fi
 # Lancer les migrations si la BDD est dispo
 php artisan migrate --force || true
 
+# Générer les clés Passport AVANT tout le reste
+echo "🔐 Génération des clés Passport..."
+mkdir -p storage
+php artisan passport:keys --force || true
+
+# Donner toutes les permissions sur le répertoire storage
+chmod -R 775 storage
+chown -R www-data:www-data storage
+
+# Vérifier que les clés existent et sont lisibles
+if [ -f storage/oauth-private.key ] && [ -f storage/oauth-public.key ]; then
+    echo "✅ Clés Passport générées et accessibles"
+    ls -la storage/oauth-*.key
+else
+    echo "❌ Problème avec les clés Passport"
+fi
+
 # Installer Passport si nécessaire
 echo "🔐 Installation de Passport..."
 php artisan passport:install --force || true
@@ -30,29 +47,6 @@ php artisan db:seed --force || true
 # Générer la documentation Swagger AVANT les caches
 echo "📚 Génération de la documentation Swagger..."
 php artisan l5-swagger:generate --no-interaction || true
-
-# Générer les clés Passport manuellement si elles n'existent pas
-echo "🔐 Vérification des clés Passport..."
-if [ ! -f storage/oauth-private.key ] || [ ! -f storage/oauth-public.key ]; then
-    echo "🔑 Génération des clés Passport..."
-
-    # Créer le répertoire storage s'il n'existe pas
-    mkdir -p storage
-
-    # Générer les clés Passport
-    php artisan passport:keys --force || true
-
-    # Vérifier si les clés ont été créées et ajuster les permissions
-    if [ -f storage/oauth-private.key ] && [ -f storage/oauth-public.key ]; then
-        echo "✅ Clés Passport générées avec succès"
-        chmod 600 storage/oauth-private.key storage/oauth-public.key
-        chown www-data:www-data storage/oauth-private.key storage/oauth-public.key
-    else
-        echo "❌ Échec de la génération des clés Passport"
-    fi
-else
-    echo "✅ Clés Passport déjà présentes"
-fi
 
 # Générer les caches pour accélérer l'app (SAUF les routes pour éviter les problèmes avec les Closures)
 # php artisan config:cache || true  # Désactivé temporairement pour debug
