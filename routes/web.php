@@ -75,6 +75,17 @@ Route::get('/swagger/health', function () {
     ], $exists ? 200 : 503);
 })->name('swagger.health');
 
+// Route pour gérer les requêtes avec paramètres de requête vers /docs
+Route::get('/docs', function (Illuminate\Http\Request $request) {
+    // Si c'est une requête avec paramètre api-docs.json, rediriger vers la vraie route
+    if ($request->has('api-docs.json')) {
+        return redirect('/docs/api-docs.json');
+    }
+
+    // Sinon, rediriger vers l'interface Swagger UI
+    return redirect('/api/documentation');
+})->name('l5-swagger.default.docs');
+
 /*
 |--------------------------------------------------------------------------
 | Routes personnalisées de l'application
