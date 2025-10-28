@@ -35,7 +35,21 @@ php artisan l5-swagger:generate --no-interaction || true
 echo "🔐 Vérification des clés Passport..."
 if [ ! -f storage/oauth-private.key ] || [ ! -f storage/oauth-public.key ]; then
     echo "🔑 Génération des clés Passport..."
+
+    # Créer le répertoire storage s'il n'existe pas
+    mkdir -p storage
+
+    # Générer les clés Passport
     php artisan passport:keys --force || true
+
+    # Vérifier si les clés ont été créées et ajuster les permissions
+    if [ -f storage/oauth-private.key ] && [ -f storage/oauth-public.key ]; then
+        echo "✅ Clés Passport générées avec succès"
+        chmod 600 storage/oauth-private.key storage/oauth-public.key
+        chown www-data:www-data storage/oauth-private.key storage/oauth-public.key
+    else
+        echo "❌ Échec de la génération des clés Passport"
+    fi
 else
     echo "✅ Clés Passport déjà présentes"
 fi
