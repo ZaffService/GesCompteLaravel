@@ -31,6 +31,15 @@ php artisan db:seed --force || true
 echo "📚 Génération de la documentation Swagger..."
 php artisan l5-swagger:generate --no-interaction || true
 
+# Générer les clés Passport manuellement si elles n'existent pas
+echo "🔐 Vérification des clés Passport..."
+if [ ! -f storage/oauth-private.key ] || [ ! -f storage/oauth-public.key ]; then
+    echo "🔑 Génération des clés Passport..."
+    php artisan passport:keys --force || true
+else
+    echo "✅ Clés Passport déjà présentes"
+fi
+
 # Générer les caches pour accélérer l'app (SAUF les routes pour éviter les problèmes avec les Closures)
 # php artisan config:cache || true  # Désactivé temporairement pour debug
 # php artisan route:cache || true  # Désactivé temporairement à cause des routes Closure
