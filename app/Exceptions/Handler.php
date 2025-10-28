@@ -42,6 +42,19 @@ class Handler extends ExceptionHandler
 
         // Gérer les erreurs de route non trouvée pour les APIs
         $this->renderable(function (\Symfony\Component\Routing\Exception\RouteNotFoundException $e, $request) {
+            // Vérifier si c'est une route helper qui n'existe pas (comme 'login')
+            if (str_contains($e->getMessage(), 'Route [login] not defined')) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => [
+                            'code' => 'UNAUTHENTICATED',
+                            'message' => 'Token d\'authentification manquant ou invalide'
+                        ]
+                    ], 401);
+                }
+            }
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
