@@ -65,5 +65,18 @@ class Handler extends ExceptionHandler
                 ], 404);
             }
         });
+
+        // Gérer les erreurs générales pour les APIs
+        $this->renderable(function (Throwable $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => [
+                        'code' => 'INTERNAL_ERROR',
+                        'message' => 'Une erreur interne s\'est produite'
+                    ]
+                ], 500);
+            }
+        });
     }
 }
