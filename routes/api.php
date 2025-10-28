@@ -24,6 +24,28 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Routes API versionnées
 Route::prefix('v1')->group(function () {
+    // Route de santé pour diagnostiquer les problèmes
+    Route::get('/health', function () {
+        try {
+            $dbConnected = \DB::connection()->getPdo() ? true : false;
+        } catch (\Exception $e) {
+            $dbConnected = false;
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'timestamp' => now(),
+            'database' => $dbConnected ? 'connected' : 'disconnected',
+            'passport_keys' => [
+                'private' => file_exists(storage_path('oauth-private.key')),
+                'public' => file_exists(storage_path('oauth-public.key'))
+            ],
+            'admins_count' => $dbConnected ? \App\Models\Admin::count() : 0,
+            'clients_count' => $dbConnected ? \App\Models\Client::count() : 0,
+            'comptes_count' => $dbConnected ? \App\Models\Compte::count() : 0
+        ]);
+    });
+
     // Routes publiques (pas d'authentification requise)
     Route::post('/auth/login', [App\Http\Controllers\AuthController::class, 'login']);
     Route::post('/auth/logout', [App\Http\Controllers\AuthController::class, 'logout']);
