@@ -39,5 +39,18 @@ class Handler extends ExceptionHandler
                 ], 401);
             }
         });
+
+        // Gérer les erreurs de route non trouvée pour les APIs
+        $this->renderable(function (\Symfony\Component\Routing\Exception\RouteNotFoundException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => [
+                        'code' => 'ROUTE_NOT_FOUND',
+                        'message' => 'Route non trouvée'
+                    ]
+                ], 404);
+            }
+        });
     }
 }
