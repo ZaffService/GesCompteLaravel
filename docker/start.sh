@@ -19,6 +19,10 @@ fi
 # Lancer les migrations si la BDD est dispo
 php artisan migrate --force || true
 
+# Installer Passport si nécessaire
+echo "🔐 Installation de Passport..."
+php artisan passport:install --force || true
+
 # Lancer les seeders pour peupler la base de données
 echo "🌱 Exécution des seeders..."
 php artisan db:seed --force || true
