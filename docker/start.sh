@@ -16,6 +16,10 @@ fi
 # Lancer les migrations si la BDD est dispo
 php artisan migrate --force || true
 
+# Lancer les seeders pour peupler la base de données
+echo "🌱 Exécution des seeders..."
+php artisan db:seed --force || true
+
 # Générer la documentation Swagger AVANT les caches
 echo "📚 Génération de la documentation Swagger..."
 php artisan l5-swagger:generate --no-interaction || true
