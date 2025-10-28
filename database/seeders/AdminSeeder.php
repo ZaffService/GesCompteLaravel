@@ -22,5 +22,14 @@ class AdminSeeder extends Seeder
             'password' => Hash::make('admin123'),
             'role' => 'admin',
         ]);
+
+        Admin::firstOrCreate([
+            'email' => 'admin1@banque.com'
+        ], [
+            'name' => 'Administrateur 1',
+            'email' => 'admin1@banque.com',
+            'password' => Hash::make('admin123'),
+            'role' => 'admin',
+        ]);
     }
 }
