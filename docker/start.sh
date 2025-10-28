@@ -25,7 +25,7 @@ mkdir -p storage
 php artisan passport:keys --force || true
 
 # Donner toutes les permissions sur le répertoire storage
-chmod -R 775 storage
+chmod -R 777 storage
 chown -R www-data:www-data storage
 
 # Vérifier que les clés existent et sont lisibles
