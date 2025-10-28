@@ -18,6 +18,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Route factice pour éviter l'erreur "Route [login] not defined"
+Route::get('/login', function () {
+    return response()->json(['message' => 'Login endpoint not available for API'], 404);
+})->name('login');
+
 /*
 |--------------------------------------------------------------------------
 | Routes Swagger / L5-Swagger
