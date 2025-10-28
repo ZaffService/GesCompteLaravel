@@ -39,20 +39,12 @@ USER www-data
 # ⚙️ Installer les dépendances PHP sans scripts (évite erreurs Laravel)
 RUN composer install --optimize-autoloader --no-dev --no-interaction --no-scripts
 
-# 🧾 Copier le .env de production
-COPY --chown=www-data:www-data .env.production .env
-
 # 🗂️ Créer les répertoires nécessaires (Swagger, cache, storage)
 RUN mkdir -p storage/api-docs bootstrap/cache && \
     chmod -R 775 storage bootstrap/cache
 
 # 🧼 Nettoyer toute trace de cache avant génération de clé
 RUN php artisan optimize:clear || true
-
-# 🔑 Générer la clé Laravel proprement
-RUN echo "APP_KEY=base64:$(openssl rand -base64 32)" > .env.tmp && \
-    cat .env >> .env.tmp && \
-    mv .env.tmp .env
 
 # 🧰 Ne PAS exécuter les commandes artisan lourdes ici
 # Elles seront faites au démarrage via start.sh

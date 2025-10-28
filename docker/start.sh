@@ -7,10 +7,13 @@ echo "🚀 Lancement du conteneur Laravel..."
 # Réinitialiser tous les caches avant le démarrage
 php artisan optimize:clear || true
 
-# Vérifier la clé APP_KEY (si manquante, la régénérer)
-if grep -q "^APP_KEY=$" .env; then
+# Générer la clé Laravel si elle n'existe pas
+echo "🔑 Vérification de la clé APP_KEY..."
+if [ -z "$APP_KEY" ]; then
     echo "⚙️ Génération d'une nouvelle clé Laravel..."
     php artisan key:generate --force --no-interaction || true
+else
+    echo "✅ APP_KEY déjà définie dans l'environnement"
 fi
 
 # Lancer les migrations si la BDD est dispo
